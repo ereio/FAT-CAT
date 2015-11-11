@@ -18,18 +18,25 @@ struct address{
 };
 extern pid_t bgproc;
 
-/* Constants  */
+/* Commands  */
 extern const char* EXIT;
-extern const char* ECHO;
-extern const char* ETIME;
-extern const char* LIMITS;
+extern const char* OPEN;
+extern const char* CLOSE;
+extern const char* CREATE;
+extern const char* RM;
 extern const char* CD;
-extern const char* _DELIMS;
-extern const char* PREV_DIR_I;
-extern const char* PREV_DIR_II;
-extern const char* _PIPES;
-extern const char* EXPORT;
+extern const char* LS;
+extern const char* MKDIR;
+extern const char* RMDIR;
+extern const char* READ;
+extern const char* WRITE;
 
+/* Constant and Labels */
+extern const char* PREV_DIR;
+extern const char* CUR_DIR;
+extern const char* _DELIMS;
+
+/* MAX var amounts */
 extern const char* ARGS;
 extern const int ACOLS;
 extern char* cuser;

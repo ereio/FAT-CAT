@@ -3,7 +3,6 @@
 
 void _parse(char *input, char arguments[][ACOLS]);
 
-void parse_whitespace(char *input);
 void parse_arguments(char *input, char args[][ACOLS]);
 void resolve_paths(char args[][ACOLS]);
 void expand_variables(char args[][ACOLS], int n);

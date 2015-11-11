@@ -1,32 +1,27 @@
 C=gcc
 CFLAGS=-I. -ansi -pedantic -Wall -std=c99 -D_XOPEN_SOURCE
-ALL_OBJS=setup.o prompt.o redirect.o parse.o read.o echo.o execute.o memmy.o
+ALL_OBJS= parse.o memmy.o filecoms.o dircoms.o repl.o
+
 
 .PHONY : compile clean run tar
-compile : cloysta
+all: fatcat
+compile : fatcat
 
-cloysta : main.o $(ALL_OBJS)
-	$(CC) $(CFLAGS) main.o $(ALL_OBJS) -o cloysta
+
+fatcat : main.o $(ALL_OBJS)
+	$(CC) $(CFLAGS) main.o $(ALL_OBJS) -o fatcat
 	rm -f *.o
-
+	
 memmy.o : UTILS/memmy.*
 	$(CC) $(CFLAGS) -o memmy.o -c ./UTILS/memmy.c
-util.o : UTILS/util.c
-	$(CC) $(CFLAGS) -o util.o -c ./UTILS/util.c
-setup.o: REPL/setup.c
-	$(CC) $(CFLAGS) -o setup.o -c ./REPL/setup.c	
-prompt.o: REPL/prompt.c
-	$(CC) $(CFLAGS) -o prompt.o -c ./REPL/prompt.c	
-read.o: REPL/read.c
-	$(CC) $(CFLAGS) -o read.o -c ./REPL/read.c
-echo.o: REPL/echo.c
-	$(CC) $(CFLAGS) -o echo.o -c ./REPL/echo.c
-execute.o: REPL/execute.c REPL/echo.o
-	$(CC) $(CFLAGS) -o execute.o -c ./REPL/execute.c
-redirect.o: REPL/redirect.c
-	$(CC) $(CFLAGS) -o redirect.o -c ./REPL/redirect.c	
-parse.o: REPL/parse.c REPL/redirect.o
+parse.o: REPL/parse.*
 	$(CC) $(CFLAGS) -o parse.o -c ./REPL/parse.c
+dircoms.o : UTILS/dircoms.*
+	$(CC) $(CFLAGS) -o dircoms.o -c ./UTILS/dircoms.c
+filecoms.o : UTILS/filecoms.*
+	$(CC) $(CFLAGS) -o filecoms.o -c ./UTILS/filecoms.c
+repl.o: REPL/repl.*
+	$(CC) $(CFLAGS) -o repl.o -c ./REPL/repl.c	
 main.o : main.c
 	$(CC) $(CFLAGS) -o main.o -c main.c
 
