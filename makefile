@@ -1,6 +1,6 @@
 C=gcc
 CFLAGS=-I. -ansi -pedantic -Wall -std=c99 -D_XOPEN_SOURCE
-ALL_OBJS= parse.o memmy.o filecoms.o dircoms.o repl.o
+ALL_OBJS= parse.o memmy.o filecoms.o dircoms.o repl.o utils.o
 
 
 .PHONY : compile clean run tar
@@ -12,6 +12,8 @@ fatcat : main.o $(ALL_OBJS)
 	$(CC) $(CFLAGS) main.o $(ALL_OBJS) -o fatcat
 	rm -f *.o
 	
+utils.o : UTILS/utils.*
+	$(CC) $(CFLAGS) -o utils.o -c ./UTILS/utils.c	
 memmy.o : UTILS/memmy.*
 	$(CC) $(CFLAGS) -o memmy.o -c ./UTILS/memmy.c
 parse.o: REPL/parse.*

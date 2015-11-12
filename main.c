@@ -1,3 +1,10 @@
+/* References
+ * http://stackoverflow.com/questions/8390356/c-command-line-arguments-eclipse-cdt
+ *
+ *
+ *
+ * */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "main.h"
@@ -5,6 +12,7 @@
 #include "REPL/repl.h"
 #include "REPL/parse.h"
 #include "UTILS/memmy.h"
+#include "UTILS/utils.h"
 
 
 /* Commands */
@@ -33,6 +41,14 @@ int margc = 1;
 int run = 1;
 int exec = 1;
 
+/* File System Globals */
+int BPB_BytesPerSec = -1;
+int BPB_SecPerClus = -1;
+int BPB_RsvdSecCnt = -1;
+int BPB_NumFATS = -1;
+int BPB_FATSz32 = -1;
+int BPB_RootClus = -1;
+
 /* ALL EXITING TASKS DONE HERE */
 int exit_shell(){
 	return purge_memmy();
@@ -49,6 +65,8 @@ int main(int argc, char* args[])
  	cuser = getenv("USER");
 
 	line = set_string(255);		/* current command line init */
+
+	run = LoadImage(args);
 
 	while(run) shell_loop(line, cmd);
 	

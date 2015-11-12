@@ -43,8 +43,17 @@ extern char* cuser;
 
 /* Globals  */
 extern struct address * ADDRS;
-
 extern int margc;
 extern int run;
 extern int exec;
 extern int runbg;
+
+/* Boot Globals */
+extern int BPB_BytesPerSec;
+extern int BPB_SecPerClus;
+extern int BPB_RsvdSecCnt;
+extern int BPB_NumFATS;
+extern int BPB_FATSz32;
+extern int BPB_RootClus;
+extern int BPB_BytesPerSec;
+extern int BPB_BytesPerSec;
