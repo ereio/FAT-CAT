@@ -55,5 +55,3 @@ extern int BPB_RsvdSecCnt;
 extern int BPB_NumFATS;
 extern int BPB_FATSz32;
 extern int BPB_RootClus;
-extern int BPB_BytesPerSec;
-extern int BPB_BytesPerSec;
