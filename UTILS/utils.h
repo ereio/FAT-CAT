@@ -1,7 +1,11 @@
 #ifndef _UTILS
 #define _UTILS
 
-int LoadImage(char* args[]);
-int LoadBPB(char* args[]);
+int LoadImage(FILE * img);
+int LoadBPB(FILE * img);
+int PrintBootSectInfo();
+int SetRootDir();
+unsigned int FindFirstSector(unsigned int cluster);
+struct cluster FindClusterInfo(unsigned int cluster, FILE * img);
 
 #endif

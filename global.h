@@ -4,19 +4,43 @@
 #include <stdio.h>
 #endif
 
+#ifndef _DEBUGGING
+#define _DEBUGGING_BOOT_SECT	// Comment out for less output
+#endif
+
+#ifndef _DEBUGGING
+#define _DEBUGGING	// Comment out for less output
+#endif
+
 #include <sys/types.h>
 /* Defines  */
 #define MAX_HEAP_SIZE 255
 #define MAX_ADDR_NAME 16
 #define DEFAULT_ALLOC 255
-
+#define EOC 268435448	// End Of Cluster
 /* Structures  */
 struct address{
 	int* loc;
 	size_t type;
 	char name[16];
 };
-extern pid_t bgproc;
+
+struct cluster{
+	unsigned long sectorNum;
+	unsigned long entryOffset;
+	unsigned int totalClusters;
+};
+
+struct fatcat{
+	unsigned int* rootdir;
+	unsigned int rootDirSectors;
+	unsigned int firstDataSector;
+	unsigned int firstRootSector;
+	unsigned int dataSectors;
+	unsigned int dataClusters;
+	struct cluster root;
+};
+
 
 /* Commands  */
 extern const char* EXIT;
@@ -43,15 +67,34 @@ extern char* cuser;
 
 /* Globals  */
 extern struct address * ADDRS;
+extern struct fatcat fatcat;
 extern int margc;
 extern int run;
 extern int exec;
 extern int runbg;
 
 /* Boot Globals */
-extern int BPB_BytesPerSec;
-extern int BPB_SecPerClus;
-extern int BPB_RsvdSecCnt;
-extern int BPB_NumFATS;
-extern int BPB_FATSz32;
-extern int BPB_RootClus;
+
+extern unsigned int BPB_BytesPerSec;
+extern unsigned char BPB_SecPerClus;
+extern unsigned short BPB_RsvdSecCnt;
+extern unsigned char BPB_NumFATs;
+extern unsigned short BPB_RootEntCnt;
+extern unsigned short BPB_TotSec16;
+extern unsigned int BPB_HiddSec;
+extern unsigned int BPB_TotSec32;
+
+extern unsigned int BPB_FATSz32;
+extern unsigned short BPB_ExtFlags;
+extern unsigned int BPB_FSVer;
+extern unsigned int BPB_RootClus;
+extern unsigned int BPB_FSInfo;
+extern unsigned int BPB_BkBootSec;
+extern unsigned int BPB_Reserved[3];
+extern unsigned int BS_DrvNum;
+extern unsigned int BS_Reserved1;
+
+extern unsigned int BS_BootSig;
+extern unsigned int BS_VolID;
+extern unsigned char BS_VolLab[11];
+extern unsigned char BS_FilSysType[8];

@@ -41,13 +41,32 @@ int margc = 1;
 int run = 1;
 int exec = 1;
 
+struct fatcat fatcat;
+
 /* File System Globals */
-int BPB_BytesPerSec = -1;
-int BPB_SecPerClus = -1;
-int BPB_RsvdSecCnt = -1;
-int BPB_NumFATS = -1;
-int BPB_FATSz32 = -1;
-int BPB_RootClus = -1;
+unsigned int BPB_BytesPerSec = 0;
+unsigned char BPB_SecPerClus  = 0;
+unsigned short BPB_RsvdSecCnt  = 0;
+unsigned char BPB_NumFATs  = 0;
+unsigned short BPB_RootEntCnt  = 0;
+unsigned short BPB_TotSec16 = 0;
+unsigned int BPB_HiddSec = 0;
+unsigned int BPB_TotSec32 = 0;
+
+unsigned int BPB_FATSz32 = 0;
+unsigned short BPB_ExtFlags = 0;
+unsigned int BPB_FSVer = 0;
+unsigned int BPB_RootClus = 0;
+unsigned int BPB_FSInfo = 0;
+unsigned int BPB_BkBootSec = 0;
+unsigned int BPB_Reserved[3] = {0,0,0};
+unsigned int BS_DrvNum = 0;
+unsigned int BS_Reserved1 = 0;
+
+unsigned int BS_BootSig = 0;
+unsigned int BS_VolID = 0;
+unsigned char BS_VolLab[11] = {0};
+unsigned char BS_FilSysType[8] = {0};
 
 /* ALL EXITING TASKS DONE HERE */
 int exit_shell(){
@@ -58,15 +77,17 @@ int main(int argc, char* args[])
 {
 	char *line;
 	char cmd[255][255];
+	FILE * img;
 
- 	if(!init_memmy()) return 1;	/* Address Mem intialization*/
+	img = fopen(args[1], "r");	/* opens file system*/
+
+ 	if(!init_memmy()) return 1;	/* Address Mem initialization*/
+ 	if(!LoadImage(img)) return 2; /* File system initialization*/
 
  	cuser = set_string(255);	/* User handle */
  	cuser = getenv("USER");
 
 	line = set_string(255);		/* current command line init */
-
-	run = LoadImage(args);
 
 	while(run) shell_loop(line, cmd);
 	
