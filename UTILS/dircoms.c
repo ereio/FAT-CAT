@@ -129,5 +129,5 @@ void PrintDirVerbose(struct directory dir){
 }
 
 void PrintDirStandard(struct directory dir){
-	printf("%s     ",dir.name);
+	printf("%-15.15s",dir.name);
 }
