@@ -4,13 +4,13 @@
 #include <stdio.h>
 #endif
 
-#ifndef _DEBUGGING
+#ifndef _DEBUGGING_BOOT_SECT
 #define _DEBUGGING_BOOT_SECT	// Comment out for less output
 #endif
 
-#ifndef _DEBUGGING
-#define _DEBUGGING	// Comment out for less output
-#endif
+//#ifndef _DEBUGGING
+//#define _DEBUGGING	// Comment out for less output
+//#endif
 
 #include <sys/types.h>
 /* Defines  */

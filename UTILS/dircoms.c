@@ -20,14 +20,45 @@
 #define DIR_FileSize 4
 
 int printDirectory(char args[][ACOLS]){
-	if(args[1][0] != 0) printf("Args[1] == %d\n", args[1][0]);
-	else parseDirectory(fatcat.currentSector);
+	int status = 0;
 
+	if(args[1][0] != 0){
+		printf("Args[1] == %d\n", args[1][0]);
+		return 0;
+	} else {
+		status = parseContents(fatcat.currentSector);
+	}
+
+	return status;
+}
+
+int parseContents(unsigned long sector){
+	unsigned long byte_addr = sector * BPB_BytesPerSec;
+	unsigned char free = 0x01;
+	int endofdir = 0;
+	int linecount = 1;
+	struct directory curdir;
+
+	while(!endofdir){
+		linecount %= 8;
+		curdir = parseDirectory(byte_addr);
+		if(ErrorCheckDirectory(curdir)) return -1;
+		free = curdir.name[0];
+
+		if(free == 0xE5 || free == 0x00){
+			endofdir = 1;
+		} else {
+			if(linecount % 8 == 0) printf("\n");
+			byte_addr += 32;
+			linecount++;
+		}
+	}
+
+	printf("\n");
 	return 0;
 }
 
-void parseDirectory(unsigned long sector){
-	unsigned long byte_addr = sector * BPB_BytesPerSec;
+struct directory parseDirectory(unsigned long byte_addr){
 	struct directory dir;
 
 	fseek(fatcat.img, byte_addr, SEEK_SET);
@@ -45,14 +76,44 @@ void parseDirectory(unsigned long sector){
 	fread(&dir.FstClusLO, DIR_FstClusLO, 1, fatcat.img);
 	fread(&dir.FileSize, DIR_FileSize, 1, fatcat.img);
 
-	printf("\nByte Address Read: %x", byte_addr);
-
-#ifdef  _DEBUGGING_BOOT_SECT
-	printDirVerbose(dir);
+#ifdef  _DEBUGGING
+	printf("\nByte Address Read: 0x%07lx", byte_addr);
+	PrintDirVerbose(dir);
+#else
+	PrintDirStandard(dir);
 #endif
+
+	return dir;
 }
 
-void printDirVerbose(struct directory dir){
+int ErrorCheckDirectory(struct directory dir){
+
+	if(dir.name[0] == 0x20) return -1;
+	for(int i=0; i < 11; i++){
+		if( dir.name[i] == 0x22 ||
+			dir.name[i] == 0x2A ||
+			dir.name[i] == 0x2B ||
+			dir.name[i] == 0x2C ||
+			dir.name[i] == 0x2E ||
+			dir.name[i] == 0x2F ||
+			dir.name[i] == 0x3A ||
+			dir.name[i] == 0x3B ||
+			dir.name[i] == 0x3C ||
+			dir.name[i] == 0x3D ||
+			dir.name[i] == 0x3E ||
+			dir.name[i] == 0x3F ||
+			dir.name[i] == 0x5B ||
+			dir.name[i] == 0x5C ||
+			dir.name[i] == 0x5D ||
+			dir.name[i] == 0x7C ){
+			printf("\nInvalid Char: %x", dir.name[i]);
+			return -2;
+		}
+	}
+	return 0;
+}
+
+void PrintDirVerbose(struct directory dir){
 	printf("\nDIR_Name:%s", dir.name);
 	printf("\nDIR_Attr: 0x%x", dir.Attr);
 	printf("\nDIR_NTRes: 0x%x", dir.NTRes);
@@ -64,6 +125,9 @@ void printDirVerbose(struct directory dir){
 	printf("\nDIR_WrtTime: 0x%x", dir.WrtTime);
 	printf("\nDIR_WrtDate 0x:%x", dir.WrtDate);
 	printf("\nDIR_FstClusLO: 0x%x", dir.FstClusLO);
-	printf("\nDIR_FileSize:0x%x", dir.FileSize);
+	printf("\nDIR_FileSize:0x%x\n", dir.FileSize);
+}
 
+void PrintDirStandard(struct directory dir){
+	printf("%s     ",dir.name);
 }
