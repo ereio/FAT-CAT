@@ -77,12 +77,11 @@ int main(int argc, char* args[])
 {
 	char *line;
 	char cmd[255][255];
-	FILE * img;
 
-	img = fopen(args[1], "r");	/* opens file system*/
+	fatcat.img = fopen(args[1], "r");	/* opens file system*/
 
  	if(!init_memmy()) return 1;	/* Address Mem initialization*/
- 	if(!LoadImage(img)) return 2; /* File system initialization*/
+ 	if(!LoadImage(fatcat.img)) return 2; /* File system initialization*/
 
  	cuser = set_string(255);	/* User handle */
  	cuser = getenv("USER");

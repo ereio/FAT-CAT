@@ -15,7 +15,8 @@
 #include <sys/stat.h>
 #include <sys/param.h>
 
-#include "../global.h"
+#include "global.h"
+#include "UTILS/dircoms.h"
 #include "repl.h"
 
 int _setup(char cmd[ACOLS][ACOLS])
@@ -73,7 +74,7 @@ int _execute(char args[][ACOLS])
 	else if(!strcmp(CD, args[0]))
 		template(args);
 	else if(!strcmp(LS, args[0]))
-		template(args);
+		printDirectory(args);
 	else if(!strcmp(MKDIR, args[0]))
 		template(args);
 	else if(!strcmp(RMDIR, args[0]))
@@ -93,5 +94,5 @@ int template(char args[][ACOLS]){
 }
 
 void invalid_command(){
-	printf("%s", "Invalid command: Type help for all commands");
+	printf("%s", "Invalid command: Type help for all commands\n");
 }

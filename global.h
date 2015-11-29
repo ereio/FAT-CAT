@@ -18,6 +18,7 @@
 #define MAX_ADDR_NAME 16
 #define DEFAULT_ALLOC 255
 #define EOC 268435448	// End Of Cluster
+
 /* Structures  */
 struct address{
 	int* loc;
@@ -32,16 +33,33 @@ struct cluster{
 };
 
 struct fatcat{
+	FILE * img;
+	unsigned long rootSector;
+	unsigned long currentSector;
 	unsigned int* rootdir;
 	unsigned int rootDirSectors;
 	unsigned int firstDataSector;
-	unsigned int firstRootSector;
 	unsigned int dataSectors;
 	unsigned int dataClusters;
 	struct cluster root;
 };
 
+struct directory{
+	char name[11];
+	char Attr;
+	char NTRes;
 
+	char CrtTimeTenth;
+	unsigned short CrtTime;
+	unsigned short CrtDate;
+	unsigned short LstAccDate;
+	unsigned short WrtTime;
+	unsigned short WrtDate;
+
+	unsigned short FstClusHi;
+	unsigned short FstClusLO;
+	unsigned int FileSize;
+};
 /* Commands  */
 extern const char* EXIT;
 extern const char* OPEN;

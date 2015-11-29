@@ -17,7 +17,8 @@ int LoadImage(FILE * img) {
 	status = LoadBPB(img);
 	status = SetRootDir(img);
 
-	if(status != 0) printf("LoadImage error: %d", status);
+	if(status != 0 && status != 1) printf("\n\nLoadImage error: %d\n", status);
+
 	return status;
 }
 
@@ -115,6 +116,7 @@ int PrintBootSectInfo() {
 	for (int i = 0; i < 8; i++)
 		printf("%c", BS_FilSysType[i]);
 
+	printf("\n");
 	return 0;
 }
 
@@ -134,15 +136,16 @@ int SetRootDir(FILE * img) {
 
 	if(fatcat.dataClusters < 65526) return -1;
 
-	fatcat.firstRootSector = FindFirstSector(BPB_RootClus);
+	fatcat.rootSector = fatcat.currentSector = FindFirstSector(BPB_RootClus);
+
 	fatcat.root = FindClusterInfo(BPB_RootClus, img);
 
 	printf("\n\nRoot Directory Address: %d", fatcat.rootDirSectors);
 	printf("\nFirst Data Sector: 0x%x", fatcat.firstDataSector);
 	printf("\nTotal Data Sectors: %d", fatcat.dataSectors);
-	printf("\nTotal Data Clusters: %d", fatcat.dataClusters);
+	printf("\nTotal Data Clusters: %d\n\n", fatcat.dataClusters);
 
-	return 0;
+	return 1;
 }
 
 unsigned int FindFirstSector(unsigned int cluster){
@@ -163,17 +166,15 @@ struct cluster FindClusterInfo(unsigned int cluster, FILE * img){
 	info.sectorNum = BPB_RsvdSecCnt + (fatOffset / BPB_BytesPerSec);
 	info.entryOffset = fatOffset % BPB_BytesPerSec;
 
-
 	printf("\n\nStarting Sector: 0x%lx", info.sectorNum);
-	printf("\nStarting Sector Address: 0x%lx", info.sectorNum * 512);
+	printf("\nStarting Sector Address: 0x%lx", (info.sectorNum + BPB_FATSz32));
 	printf("\nFatOffset: 0x%lx", fatOffset);
 	printf("\nSector Offset: 0x%lx", info.entryOffset);
-	printf("\nTotal Offset: 0x%lx", info.sectorNum + info.entryOffset);
+	printf("\nTotal Offset: 0x%lx\n\n", info.sectorNum + info.entryOffset);
 
 	// fseek(&value ,info.sectorNum + info.entryOffset, SEEK_SET);
 	/*while(value != EOC){
 		info.totalClusters++;
-
 	}
 	*/
 	return info;
