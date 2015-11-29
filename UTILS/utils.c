@@ -9,12 +9,15 @@
 #include <string.h>
 #include <stdlib.h>
 #include "utils.h"
+#include "dircoms.h"
 
 int LoadImage(FILE * img) {
 
 	int status = 0;
 
+	printf("Loading BPB\n");
 	status = LoadBPB(img);
+	printf("Setting root directory\n");
 	status = SetRootDir(img);
 
 	if(status != 0 && status != 1) printf("\n\nLoadImage error: %d\n", status);
@@ -23,9 +26,9 @@ int LoadImage(FILE * img) {
 }
 
 int LoadBPB(FILE * img) {
-
 	fseek(img, 11, SEEK_SET); // Seek_set sets the offset from the beginning of the file
 							  // Offset moves to NEXT Byte so offset of 10 would put you at 11
+
 	fread(&BPB_BytesPerSec, 2, 1, img);
 	fread(&BPB_SecPerClus, 1, 1, img);
 	fread(&BPB_RsvdSecCnt, 2, 1, img);
@@ -79,7 +82,6 @@ int PrintBootSectInfo() {
 
 	printf("Total Sector Count in 32Bit: %d\n", BPB_TotSec32);
 
-	//
 	printf("Sectors Occupied (32-bit count): %d\n", BPB_FATSz32);
 
 	printf("Various External Flags: %d\n", BPB_ExtFlags);
@@ -101,7 +103,6 @@ int PrintBootSectInfo() {
 
 	printf("Used by windows NT lol: %d\n", BS_Reserved1);
 
-	//
 	printf("Indicates if following values are present (ID, LAB): %d\n",
 			BS_BootSig);
 
@@ -139,6 +140,9 @@ int SetRootDir(FILE * img) {
 	fatcat.rootSector = fatcat.currentSector = FindFirstSector(BPB_RootClus);
 
 	fatcat.root = FindClusterInfo(BPB_RootClus, img);
+
+	fatcat.currentDirAddr = fatcat.firstDataSector * 512;
+	fatcat.dirName = "/";
 
 	printf("\n\nRoot Directory Address: %d", fatcat.rootDirSectors);
 	printf("\nFirst Data Sector: 0x%x", fatcat.firstDataSector);

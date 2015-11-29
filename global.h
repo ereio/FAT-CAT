@@ -18,6 +18,13 @@
 #define MAX_ADDR_NAME 16
 #define DEFAULT_ALLOC 255
 #define EOC 268435448	// End Of Cluster
+#define ATTR_READ_ONLY 0x01
+#define ATTR_HIDDEN 0x02
+#define ATTR_SYSTEM 0x04
+#define ATTR_VOLUME_ID 0x08
+#define ATTR_DIRECTORY 0x10
+#define ATTR_ARCHIVE 0x20
+#define ATTR_LONG_NAME (ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_VOLUME_ID)
 
 /* Structures  */
 struct address{
@@ -30,18 +37,6 @@ struct cluster{
 	unsigned long sectorNum;
 	unsigned long entryOffset;
 	unsigned int totalClusters;
-};
-
-struct fatcat{
-	FILE * img;
-	unsigned long rootSector;
-	unsigned long currentSector;
-	unsigned int* rootdir;
-	unsigned int rootDirSectors;
-	unsigned int firstDataSector;
-	unsigned int dataSectors;
-	unsigned int dataClusters;
-	struct cluster root;
 };
 
 struct directory{
@@ -60,6 +55,22 @@ struct directory{
 	unsigned short FstClusLO;
 	unsigned int FileSize;
 };
+
+struct fatcat{
+        FILE * img;
+        unsigned long rootSector;
+        unsigned long currentSector;
+        unsigned int currentCluster;
+        unsigned int* rootdir;
+        unsigned int rootDirSectors;
+        unsigned int firstDataSector;
+        unsigned int dataSectors;
+        unsigned int dataClusters;
+        struct cluster root;
+	unsigned long currentDirAddr;
+	char * dirName;
+};
+
 /* Commands  */
 extern const char* EXIT;
 extern const char* OPEN;

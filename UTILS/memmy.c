@@ -81,6 +81,7 @@ int init_memmy(){
 	if(ADDRS == NULL) return 0;
 
 	for(i = 0; i < MAX_HEAP_SIZE; i++){
+		ADDRS[i].loc = NULL;
 		_clear(&ADDRS[i]);
 	}
 

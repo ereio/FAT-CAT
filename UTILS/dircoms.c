@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "../global.h"
 #include "UTILS/dircoms.h"
 #include "UTILS/utils.h"
@@ -41,7 +42,7 @@ int parseContents(unsigned long sector){
 
 	while(!endofdir){
 		linecount %= 8;
-		curdir = parseDirectory(byte_addr);
+		curdir = parseDirectoryEntry(byte_addr);
 		if(ErrorCheckDirectory(curdir)) return -1;
 		free = curdir.name[0];
 
@@ -58,7 +59,7 @@ int parseContents(unsigned long sector){
 	return 0;
 }
 
-struct directory parseDirectory(unsigned long byte_addr){
+struct directory parseDirectoryEntry(unsigned long byte_addr){
 	struct directory dir;
 
 	fseek(fatcat.img, byte_addr, SEEK_SET);
@@ -129,5 +130,40 @@ void PrintDirVerbose(struct directory dir){
 }
 
 void PrintDirStandard(struct directory dir){
-	printf("%-15.15s",dir.name);
+	char * str = dir.name;
+
+	if (dir.Attr & ATTR_LONG_NAME) return;
+
+	if (dir.Attr & ATTR_DIRECTORY) {
+		while (!isspace(*str)) {
+			printf("%c", str[0]);
+			str++;
+		}
+
+		printf("/\t");
+	}
+	else {
+		char ext[3];
+		ext[0] = '\0';
+		if (strlen(str) >= 9 && !isspace(str[8]) && str[8] != '\0') {
+			int i = 8;
+			while (str[i] != '\0') {
+				ext[i - 8] = str[i];
+				i++;
+			}
+		}
+
+		while (!isspace(*str) && *str != '\0') {
+			printf("%c", str[0]);
+			str++;
+		}
+
+		if (ext[0] != '\0')
+			printf(".%s", ext);
+		printf("\t");
+	}
+}
+
+void ChangeDirectory(char * dir) {
+	// throw new NotYetImplementedExceptoin();
 }

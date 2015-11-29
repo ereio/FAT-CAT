@@ -81,7 +81,12 @@ int main(int argc, char* args[])
 	fatcat.img = fopen(args[1], "r");	/* opens file system*/
 
  	if(!init_memmy()) return 1;	/* Address Mem initialization*/
+
+	printf("Initializing file system\n");
+
  	if(!LoadImage(fatcat.img)) return 2; /* File system initialization*/
+
+	printf("Finished\n");
 
  	cuser = set_string(255);	/* User handle */
  	cuser = getenv("USER");
@@ -89,8 +94,10 @@ int main(int argc, char* args[])
 	line = set_string(255);		/* current command line init */
 
 	while(run) shell_loop(line, cmd);
-	
-	return exit_shell();
+
+//	return exit_shell();
+
+	return 0;
 }
 
 int shell_loop(char * line, char cmd[255][255]) {

@@ -41,7 +41,7 @@ int _prompt(char** settings)
 		strcpy(machine, "local\0");
 	}
 
-	printf("%s@%s: %s => ", cuser, machine, pwd);
+	printf("%s@%s: %s => ", cuser, machine, fatcat.dirName);
 
 	return 0;
 }
