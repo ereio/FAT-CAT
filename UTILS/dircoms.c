@@ -42,7 +42,7 @@ int parseContents(unsigned long sector){
 
 	while(!endofdir){
 		linecount %= 8;
-		curdir = parseDirectoryEntry(byte_addr);
+		curdir = parseDirectoryEntry(byte_addr, 1);
 		if(ErrorCheckDirectory(curdir)) return -1;
 		free = curdir.name[0];
 
@@ -55,11 +55,10 @@ int parseContents(unsigned long sector){
 		}
 	}
 
-	printf("\n");
 	return 0;
 }
 
-struct directory parseDirectoryEntry(unsigned long byte_addr){
+struct directory parseDirectoryEntry(unsigned long byte_addr, int print_values){
 	struct directory dir;
 
 	fseek(fatcat.img, byte_addr, SEEK_SET);
@@ -80,9 +79,9 @@ struct directory parseDirectoryEntry(unsigned long byte_addr){
 #ifdef  _DEBUGGING
 	printf("\nByte Address Read: 0x%07lx", byte_addr);
 	PrintDirVerbose(dir);
-#else
-	PrintDirStandard(dir);
 #endif
+	if (print_values)
+		PrintDirStandard(dir);
 
 	return dir;
 }

@@ -2,7 +2,7 @@
 #define _DIRCOMS
 
 int parseContents(unsigned long sector);
-struct directory parseDirectoryEntry(unsigned long sector);
+struct directory parseDirectoryEntry(unsigned long sector, int print);
 int ErrorCheckDirectory(struct directory dir);
 
 int printDirectory(char args[][ACOLS]);

@@ -17,6 +17,7 @@
 
 #include "global.h"
 #include "UTILS/dircoms.h"
+#include "UTILS/filecoms.h"
 #include "repl.h"
 
 int _setup(char cmd[ACOLS][ACOLS])
@@ -64,7 +65,7 @@ int _execute(char args[][ACOLS])
 	if(!strcmp(EXIT, args[0]))
 		run = 0;
 	else if(!strcmp(OPEN, args[0]))
-		template(args);
+		openFile(args);
 	else if(!strcmp(CLOSE, args[0]))
 		template(args);
 	else if(!strcmp(CREATE, args[0]))

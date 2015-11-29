@@ -25,6 +25,9 @@
 #define ATTR_DIRECTORY 0x10
 #define ATTR_ARCHIVE 0x20
 #define ATTR_LONG_NAME (ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_VOLUME_ID)
+#define R 0
+#define W 1
+#define RW 2
 
 /* Structures  */
 struct address{
@@ -54,6 +57,7 @@ struct directory{
 	unsigned short FstClusHi;
 	unsigned short FstClusLO;
 	unsigned int FileSize;
+	unsigned int Mode;
 };
 
 struct fatcat{
@@ -95,6 +99,7 @@ extern const int ACOLS;
 extern char* cuser;
 
 /* Globals  */
+extern struct directory * OPENFILES;
 extern struct address * ADDRS;
 extern struct fatcat fatcat;
 extern int margc;
