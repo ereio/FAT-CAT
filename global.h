@@ -59,6 +59,7 @@ struct directory{
 	unsigned short FstClusLO;
 	unsigned int FileSize;
 	unsigned int Mode;
+	struct cluster cluster;
 };
 
 struct fatcat{

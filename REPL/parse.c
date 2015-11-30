@@ -42,10 +42,8 @@ void parse_arguments(char* input, char args[][ACOLS]) {
 }
 
 void resolve_paths(char args[][ACOLS]) {
-
 	char* BACK = "..";
 	char* CURR = ".";
-	char* ENVAR = "$";
 	char* NL = "\n";
 
 	int i;
@@ -54,15 +52,12 @@ void resolve_paths(char args[][ACOLS]) {
 	if(strcmp(args[0], NL) == 0) return;
 
 	for(i = 0; i < margc; i++){
-		if(strstr(args[i], BACK) != NULL){
-			fillBack(args, i); hit++;
-		}
-		if(strstr(args[i], CURR) != NULL){
-			fillCurr(args, i); hit++;
-		}
-		if(strstr(args[i], ENVAR) != NULL){
-			expand_variables(args, i);
-		}
+//		if(strstr(args[i], BACK) != NULL){
+//			fillBack(args, i); hit++;
+//		}
+//		if(strstr(args[i], CURR) != NULL){
+//			fillCurr(args, i); hit++;
+//		}
 	}
 }
 
@@ -93,15 +88,16 @@ void fillCurr(char args[][ACOLS], int n){
 }
 
 void fillBack(char args[][ACOLS], int n){
-
 	char* cpath;
 	char* pwd = malloc(255 * sizeof(char));
 	char* mfpwd = pwd;
 
+	printf("Hit");
 	pwd =  getenv("PWD");
 
 	cpath = strtok(args[n], "/");		/* Sections each path directive*/
 
+	printf("cpath:%s", cpath);
 	while(cpath != NULL){				/* Either cuts or adds to pwd*/
 		if(strcmp(cpath, "..") == 0){
 			cutpwd(pwd);

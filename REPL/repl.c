@@ -34,9 +34,6 @@ int _prompt(char** settings)
 {
 	char* machine = getenv("MACHINE");
 
-	char buf[MAXPATHLEN];
-	char* pwd = getcwd(buf, MAXPATHLEN);
-
 	if(machine == NULL) {
 		machine = malloc(128 * sizeof(char));
 		strcpy(machine, "local\0");
@@ -73,7 +70,7 @@ int _execute(char args[][ACOLS])
 	else if(!strcmp(RM, args[0]))
 		template(args);
 	else if(!strcmp(CD, args[0]))
-		template(args);
+		ChangeDirectory(args);
 	else if(!strcmp(LS, args[0]))
 		PrintDirectory(args);
 	else if(!strcmp(MKDIR, args[0]))

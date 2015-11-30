@@ -20,6 +20,8 @@
 #define DIR_FstClusLO 2
 #define DIR_FileSize 4
 
+#define DIR_SIZE 32
+
 #define EXT 8
 #define NAMELEN 11
 
@@ -30,46 +32,92 @@ int PrintDirectory(char args[][ACOLS]){
 		printf("Args[1] == %d\n", args[1][0]);
 		return 0;
 	} else {
-		status = parseContents(*fatcat.curClus);
+		status = printContents(*fatcat.curClus);
 	}
 
 	return status;
 }
 
 void ChangeDirectory(char args[][ACOLS]){
+	struct cluster * newclus = malloc(sizeof(struct cluster));
 	char * name = malloc(sizeof(char) * strlen(args[1]));
 
+	strcpy(name, args[1]);
+	int result = -2;
 
+	if(strlen(name) == 0){
+		printf("\nUsage: cd <directory_name>");
+		return;
+	}
 
+	for(int i=0; i < strlen(name); i++){
+		if(name[i] == '/') name[i] = '\0';
+		name[i] = toupper(name[i]);
+	}
+
+	result = findDirectory(*fatcat.curClus, name);
+
+	if(!result){
+		printf("\n%s was found as entry", name);
+
+	} else {
+		printf("\n%s is not a directory", name);
+	}
+
+	free(name);
 }
 
-int parseContents(struct cluster cluster){
+// CHANGE TO DIRECTORY, ABSTRACT THE CLUSTERS
+int findDirectory(struct cluster cluster, char * name){
 	int endofdir = 0;
-	int linecount = 1;
-	struct directory curdir;
 	unsigned long byte_addr = 0;
-	unsigned char free = 0;
+	struct directory dir;
+	char dirName[12];
 
 	for(int i=0; i < cluster.clusterNum; i++){
 		byte_addr = cluster.firstSectors[i] * BPB_BytesPerSec;
 
-#ifdef _DEBUGGING
-		printf("\nParse Contents Byte Addr:%l\n", byte_addr);
-#endif
+		while(!endofdir){
+			dir = parseDirectoryEntry(byte_addr, 0);
+			if(ErrorCheckDirectory(dir)) return -1;
+
+			if(dir.Attr & ATTR_DIRECTORY){
+				ConvertDirName(dir, dirName);
+				if(!strcmp(dirName, name)){
+					return 0;
+				}
+			}
+			byte_addr += DIR_SIZE;
+			endofdir = dir.name[0] == 0x00 ? 1 : 0;
+		}
+	}
+
+	return 1;
+}
+
+struct cluster findCluster(struct directory dir){
+		struct cluster newclus;
+
+		return newclus;
+}
+
+int printContents(struct cluster cluster){
+	int endofdir = 0;
+	int linecount = 1;
+	struct directory curdir;
+	unsigned long byte_addr = 0;
+
+	for(int i=0; i < cluster.clusterNum; i++){
+		byte_addr = cluster.firstSectors[i] * BPB_BytesPerSec;
+
 		while(!endofdir){
 			linecount %= 8;
 			curdir = parseDirectoryEntry(byte_addr, 1);
 			if(ErrorCheckDirectory(curdir)) return -1;
-			free = curdir.name[0];
-
-			// only if 0x00 is encountered do we end, 0xE5 could just be deleted entry
-			if(free == 0x00){
-				endofdir = 1;
-			} else {
-				if(linecount % 8 == 0) printf("\n");
-				byte_addr += 32;
-				linecount++;
-			}
+			if(linecount % 8 == 0) printf("\n");
+			byte_addr += 32;
+			linecount++;
+			endofdir = curdir.name[0] == 0x00 ? 1 : 0;
 		}
 	}
 
@@ -104,8 +152,7 @@ struct directory parseDirectoryEntry(unsigned long byte_addr, int print_values){
 }
 
 int ErrorCheckDirectory(struct directory dir){
-
-	if(dir.name[0] <= 0x20) return -1;
+	if(dir.name[0] < 0x20 && !(dir.name[0] == 0x00)) return -1;
 	for(int i=0; i < 11; i++){
 		if( dir.name[i] == 0x22 ||
 			dir.name[i] == 0x2A ||
@@ -163,8 +210,7 @@ void ConvertDirName(struct directory dir, char * name){
 
 	if (dir.Attr & ATTR_DIRECTORY) {
 		if(ext[0] != '\0') strcat(temp, ext);
-		sprintf(name,"%s/", temp);
-
+		sprintf(name, "%s", temp);
 	} else {
 		namepos = sprintf(name, "%s", temp);
 		if (ext[0] != '\0') sprintf(name+namepos, ".%s", ext);
@@ -174,7 +220,9 @@ void ConvertDirName(struct directory dir, char * name){
 void PrintDirStandard(struct directory dir){
 	char name[12] = {"\0"};
 	ConvertDirName(dir, name);
-	printf("%s\t", name);
+	printf("%s", name);
+	if(dir.Attr & ATTR_DIRECTORY) printf("/");
+	printf("\t");
 
 }
 
