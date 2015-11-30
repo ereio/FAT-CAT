@@ -40,6 +40,7 @@ void ChangeDirectory(char args[][ACOLS]){
 	char * name = malloc(sizeof(char) * strlen(args[1]));
 
 
+
 }
 
 int parseContents(struct cluster cluster){
@@ -70,7 +71,6 @@ int parseContents(struct cluster cluster){
 				linecount++;
 			}
 		}
-
 	}
 
 	return 0;
@@ -145,12 +145,14 @@ void PrintDirVerbose(struct directory dir){
 	printf("\nDIR_FileSize:0x%x\n", dir.FileSize);
 }
 
-void PrintDirStandard(struct directory dir){
+// Needed for comparisons in cd
+void ConvertDirName(struct directory dir, char * name){
 	char * str = dir.name;
-	char temp[12];
+	char temp[12] = {"\0"};
+	int namepos = 0;
 
 	if (dir.Attr & ATTR_LONG_NAME) return;
-	if (dir.name[0] == 0xE5) return;	// means entry was deleted or freed
+	if (dir.name[0] == 0xE5) return;
 
 	if (dir.Attr & ATTR_DIRECTORY) {
 		for(int i=0; i < NAMELEN; i++){
@@ -158,7 +160,7 @@ void PrintDirStandard(struct directory dir){
 				temp[i] = str[i];
 		}
 
-		printf("%s/\t", temp);
+		sprintf(name,"%s/", temp);
 	} else {
 		char ext[3];
 		ext[0] = '\0';
@@ -169,10 +171,16 @@ void PrintDirStandard(struct directory dir){
 		for(int i=0; i < EXT && !isspace(str[i]); i++)
 				temp[i] = str[i];
 
-		printf("%s", temp);
-		if (ext[0] != '\0') printf(".%s", ext);
-		printf("\t");
+		namepos = sprintf(name, "%s", temp);
+		if (ext[0] != '\0') sprintf(name+namepos, ".%s", ext);
 	}
+}
+
+void PrintDirStandard(struct directory dir){
+	char name[12] = {"\0"};
+	ConvertDirName(dir, name);
+	printf("%s\t", name);
+
 }
 
 
