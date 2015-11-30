@@ -150,27 +150,22 @@ void ConvertDirName(struct directory dir, char * name){
 	char * str = dir.name;
 	char temp[12] = {"\0"};
 	int namepos = 0;
+	char ext[3] = {"\0"};
 
 	if (dir.Attr & ATTR_LONG_NAME) return;
 	if (dir.name[0] == 0xE5) return;
 
+	for(int i=EXT; i < NAMELEN && !isspace(str[i]); i++)
+			ext[i-EXT] = str[i];
+
+	for(int i=0; i < EXT && !isspace(str[i]); i++)
+			temp[i] = str[i];
+
 	if (dir.Attr & ATTR_DIRECTORY) {
-		for(int i=0; i < NAMELEN; i++){
-			if(!isspace(str[i]))
-				temp[i] = str[i];
-		}
-
+		if(ext[0] != '\0') strcat(temp, ext);
 		sprintf(name,"%s/", temp);
+
 	} else {
-		char ext[3];
-		ext[0] = '\0';
-		for(int i=EXT; i < NAMELEN && !isspace(str[i]); i++)
-				ext[i-EXT] = str[i];
-
-
-		for(int i=0; i < EXT && !isspace(str[i]); i++)
-				temp[i] = str[i];
-
 		namepos = sprintf(name, "%s", temp);
 		if (ext[0] != '\0') sprintf(name+namepos, ".%s", ext);
 	}
