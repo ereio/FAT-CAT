@@ -1,6 +1,6 @@
 #ifndef _FILECOMS
 #define _FILECOMS
 
-void openFile(char args[][ACOLS]);
+int openFile(char args[][ACOLS]);
 
 #endif

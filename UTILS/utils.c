@@ -137,11 +137,10 @@ int SetRootDir(FILE * img) {
 
 	if(fatcat.dataClusters < 65526) return -1;
 
-	fatcat.rootSector = fatcat.currentSector = FindFirstSector(BPB_RootClus);
+	fatcat.root = FindClusterInfo(BPB_RootClus);
 
-	fatcat.root = FindClusterInfo(BPB_RootClus, img);
+	memcpy(fatcat.curClus, &fatcat.root, sizeof(struct cluster));
 
-	fatcat.currentDirAddr = fatcat.firstDataSector * 512;
 	fatcat.dirName = "/";
 
 	printf("\n\nRoot Directory Address: %d", fatcat.rootDirSectors);
@@ -160,27 +159,43 @@ unsigned int FindFirstSector(unsigned int cluster){
 	return firstSector;
 }
 
-struct cluster FindClusterInfo(unsigned int cluster, FILE * img){
+struct cluster FindClusterInfo(unsigned int cluster){
 	struct cluster info;
-	unsigned int fatOffset = cluster * 4;
-/*	int more = 1; // Indicates there are more root clusters
-	unsigned long value = 0;
-	unsigned long byteAddr;*/
+	unsigned int fatOffset = 0;
+	unsigned long next_cluster = 0;
+	unsigned long byte_addr;
+	int more = 1; 				// Indicates there are more clusters in chain
+	info.clusterNum = 0;
 
-	info.sectorNum = BPB_RsvdSecCnt + (fatOffset / BPB_BytesPerSec);
-	info.entryOffset = fatOffset % BPB_BytesPerSec;
+	while(more){
+		fatOffset = cluster * 4;
 
-	printf("\n\nStarting Sector: 0x%lx", info.sectorNum);
-	printf("\nStarting Sector Address: 0x%lx", (info.sectorNum + BPB_FATSz32));
-	printf("\nFatOffset: 0x%lx", fatOffset);
-	printf("\nSector Offset: 0x%lx", info.entryOffset);
-	printf("\nTotal Offset: 0x%lx\n\n", info.sectorNum + info.entryOffset);
+		// Finds first data sector for cluster / cluster chain node
+		info.firstSectors[info.clusterNum] = FindFirstSector(cluster);
+		info.sectorNums[info.clusterNum] = BPB_RsvdSecCnt + (fatOffset / BPB_BytesPerSec);	// sector of cluster chain info
+		info.entryOffset[info.clusterNum] = fatOffset % BPB_BytesPerSec;					// offset of cluster chain info
 
-	// fseek(&value ,info.sectorNum + info.entryOffset, SEEK_SET);
-	/*while(value != EOC){
-		info.totalClusters++;
+		// address found using the sector and offset
+		byte_addr = (info.sectorNums[info.clusterNum] * BPB_BytesPerSec) + info.entryOffset[info.clusterNum];
+
+		// goes to address to see if another cluster contains information in a cluster chain
+		fseek(fatcat.img, byte_addr, SEEK_SET);
+		fread(&next_cluster, 4, 1, fatcat.img);
+
+		// check to see if the End of Cluster Chain value was found
+		more = next_cluster != EOC;
+		if(more) cluster = next_cluster;
+
+#ifdef _DEBUGGING
+		printf("\nFatOffset: 0x%x", fatOffset);
+		printf("\nThisFATSecNum: 0x%x", info.sectorNums[info.clusterNum]);
+		printf("\nThisFATEntOff: 0x%x", info.entryOffset[info.clusterNum]);
+		printf("\nThisFATSecNum Address: 0x%lx\n", byte_addr);
+		printf("\nEOC hit, value == 0x%lx", next_cluster);
+#endif
+		info.clusterNum++;
 	}
-	*/
+
 	return info;
 }
 

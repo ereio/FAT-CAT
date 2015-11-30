@@ -7,16 +7,18 @@
 #include "UTILS/filecoms.h"
 #include "UTILS/utils.h"
 
-void openFile(char args[][ACOLS]) {
+int openFile(char args[][ACOLS]) {
 	// Parse through entries in directory
 	// If exists && is file, add to open file table (OPENFILES, extern)
 	// Else if directory, print error
 	// Else print error
 	char * fileName = args[1][0];
-        unsigned long byte_addr = fatcat.currentSector * BPB_BytesPerSec;
-        unsigned char free = 0x01;
-        int endofdir = 0;
-        int linecount = 1;
+	// *** WARNING ***
+	// Directory organization needs to be discussed before proceeding
+	unsigned long byte_addr = fatcat.curClus->firstSectors[0] * BPB_BytesPerSec;
+	unsigned char free = 0x01;
+	int endofdir = 0;
+	int linecount = 1;
 	int i = 0;
 	int found_match = 0;
         struct directory curdir;
@@ -55,4 +57,6 @@ void openFile(char args[][ACOLS]) {
 	else {
 		printf("Error: no file '%s' found\n", fileName);
 	}
+
+	return 0;
 }

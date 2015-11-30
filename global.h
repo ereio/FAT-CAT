@@ -37,9 +37,10 @@ struct address{
 };
 
 struct cluster{
-	unsigned long sectorNum;
-	unsigned long entryOffset;
-	unsigned int totalClusters;
+	unsigned int sectorNums[255];
+	unsigned int entryOffset[255];
+	unsigned int firstSectors[255];
+	unsigned int clusterNum;
 };
 
 struct directory{
@@ -61,17 +62,14 @@ struct directory{
 };
 
 struct fatcat{
-        FILE * img;
-        unsigned long rootSector;
-        unsigned long currentSector;
-        unsigned int currentCluster;
-        unsigned int* rootdir;
-        unsigned int rootDirSectors;
-        unsigned int firstDataSector;
-        unsigned int dataSectors;
-        unsigned int dataClusters;
-        struct cluster root;
-	unsigned long currentDirAddr;
+    FILE * img;
+    unsigned int rootDirSectors;
+    unsigned int firstDataSector;
+    unsigned int dataSectors;
+    unsigned int dataClusters;
+    struct cluster root;
+    struct cluster * curClus;
+    struct directory * curDir;
 	char * dirName;
 };
 
@@ -100,6 +98,7 @@ extern char* cuser;
 
 /* Globals  */
 extern struct directory * OPENFILES;
+
 extern struct address * ADDRS;
 extern struct fatcat fatcat;
 extern int margc;

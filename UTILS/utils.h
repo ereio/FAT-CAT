@@ -6,6 +6,6 @@ int LoadBPB(FILE * img);
 int PrintBootSectInfo();
 int SetRootDir();
 unsigned int FindFirstSector(unsigned int cluster);
-struct cluster FindClusterInfo(unsigned int cluster, FILE * img);
+struct cluster FindClusterInfo(unsigned int cluster);
 
 #endif

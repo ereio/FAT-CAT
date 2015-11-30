@@ -42,7 +42,7 @@ int _prompt(char** settings)
 		strcpy(machine, "local\0");
 	}
 
-	printf("%s@%s: %s => ", cuser, machine, fatcat.dirName);
+	printf("\n%s@%s: %s => ", cuser, machine, fatcat.dirName);
 
 	return 0;
 }
@@ -75,7 +75,7 @@ int _execute(char args[][ACOLS])
 	else if(!strcmp(CD, args[0]))
 		template(args);
 	else if(!strcmp(LS, args[0]))
-		printDirectory(args);
+		PrintDirectory(args);
 	else if(!strcmp(MKDIR, args[0]))
 		template(args);
 	else if(!strcmp(RMDIR, args[0]))

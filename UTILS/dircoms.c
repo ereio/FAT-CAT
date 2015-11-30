@@ -20,39 +20,57 @@
 #define DIR_FstClusLO 2
 #define DIR_FileSize 4
 
-int printDirectory(char args[][ACOLS]){
+#define EXT 8
+#define NAMELEN 11
+
+int PrintDirectory(char args[][ACOLS]){
 	int status = 0;
 
 	if(args[1][0] != 0){
 		printf("Args[1] == %d\n", args[1][0]);
 		return 0;
 	} else {
-		status = parseContents(fatcat.currentSector);
+		status = parseContents(*fatcat.curClus);
 	}
 
 	return status;
 }
 
-int parseContents(unsigned long sector){
-	unsigned long byte_addr = sector * BPB_BytesPerSec;
-	unsigned char free = 0x01;
+void ChangeDirectory(char args[][ACOLS]){
+	char * name = malloc(sizeof(char) * strlen(args[1]));
+
+
+}
+
+int parseContents(struct cluster cluster){
 	int endofdir = 0;
 	int linecount = 1;
 	struct directory curdir;
+	unsigned long byte_addr = 0;
+	unsigned char free = 0;
 
-	while(!endofdir){
-		linecount %= 8;
-		curdir = parseDirectoryEntry(byte_addr, 1);
-		if(ErrorCheckDirectory(curdir)) return -1;
-		free = curdir.name[0];
+	for(int i=0; i < cluster.clusterNum; i++){
+		byte_addr = cluster.firstSectors[i] * BPB_BytesPerSec;
 
-		if(free == 0xE5 || free == 0x00){
-			endofdir = 1;
-		} else {
-			if(linecount % 8 == 0) printf("\n");
-			byte_addr += 32;
-			linecount++;
+#ifdef _DEBUGGING
+		printf("\nParse Contents Byte Addr:%l\n", byte_addr);
+#endif
+		while(!endofdir){
+			linecount %= 8;
+			curdir = parseDirectoryEntry(byte_addr, 1);
+			if(ErrorCheckDirectory(curdir)) return -1;
+			free = curdir.name[0];
+
+			// only if 0x00 is encountered do we end, 0xE5 could just be deleted entry
+			if(free == 0x00){
+				endofdir = 1;
+			} else {
+				if(linecount % 8 == 0) printf("\n");
+				byte_addr += 32;
+				linecount++;
+			}
 		}
+
 	}
 
 	return 0;
@@ -80,15 +98,14 @@ struct directory parseDirectoryEntry(unsigned long byte_addr, int print_values){
 	printf("\nByte Address Read: 0x%07lx", byte_addr);
 	PrintDirVerbose(dir);
 #endif
-	if (print_values)
-		PrintDirStandard(dir);
+	if (print_values) PrintDirStandard(dir);
 
 	return dir;
 }
 
 int ErrorCheckDirectory(struct directory dir){
 
-	if(dir.name[0] == 0x20) return -1;
+	if(dir.name[0] <= 0x20) return -1;
 	for(int i=0; i < 11; i++){
 		if( dir.name[i] == 0x22 ||
 			dir.name[i] == 0x2A ||
@@ -130,39 +147,32 @@ void PrintDirVerbose(struct directory dir){
 
 void PrintDirStandard(struct directory dir){
 	char * str = dir.name;
+	char temp[12];
 
 	if (dir.Attr & ATTR_LONG_NAME) return;
+	if (dir.name[0] == 0xE5) return;	// means entry was deleted or freed
 
 	if (dir.Attr & ATTR_DIRECTORY) {
-		while (!isspace(*str)) {
-			printf("%c", str[0]);
-			str++;
+		for(int i=0; i < NAMELEN; i++){
+			if(!isspace(str[i]))
+				temp[i] = str[i];
 		}
 
-		printf("/\t");
-	}
-	else {
+		printf("%s/\t", temp);
+	} else {
 		char ext[3];
 		ext[0] = '\0';
-		if (strlen(str) >= 9 && !isspace(str[8]) && str[8] != '\0') {
-			int i = 8;
-			while (str[i] != '\0') {
-				ext[i - 8] = str[i];
-				i++;
-			}
-		}
+		for(int i=EXT; i < NAMELEN && !isspace(str[i]); i++)
+				ext[i-EXT] = str[i];
 
-		while (!isspace(*str) && *str != '\0') {
-			printf("%c", str[0]);
-			str++;
-		}
 
-		if (ext[0] != '\0')
-			printf(".%s", ext);
+		for(int i=0; i < EXT && !isspace(str[i]); i++)
+				temp[i] = str[i];
+
+		printf("%s", temp);
+		if (ext[0] != '\0') printf(".%s", ext);
 		printf("\t");
 	}
 }
 
-void ChangeDirectory(char * dir) {
-	// throw new NotYetImplementedExceptoin();
-}
+
