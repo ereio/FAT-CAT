@@ -185,7 +185,7 @@ struct cluster FindClusterInfo(unsigned int cluster){
 		fread(&next_cluster, 4, 1, fatcat.img);
 
 		// check to see if the End of Cluster Chain value was found
-		more = next_cluster != EOC;
+		more = next_cluster < EOC;
 		if(more) cluster = next_cluster;
 
 #ifdef _DEBUGGING_F
@@ -193,7 +193,8 @@ struct cluster FindClusterInfo(unsigned int cluster){
 		printf("\nThisFATSecNum: 0x%x", info.sectorNums[info.clusterNum]);
 		printf("\nThisFATEntOff: 0x%x", info.entryOffset[info.clusterNum]);
 		printf("\nThisFATSecNum Address: 0x%lx\n", byte_addr);
-		printf("\nEOC hit, value == 0x%lx", next_cluster);
+		printf("\nFIRST SECTOR: 0x%x", info.firstSectors[info.clusterNum]);
+		printf("\nEOC value == 0x%lx", next_cluster);
 #endif
 		info.clusterNum++;
 	}

@@ -141,7 +141,6 @@ struct directory parsedir(unsigned long byte_addr, int print_values){
 	fread(&dir.FstClusLO, DIR_FstClusLO, 1, fatcat.img);
 	fread(&dir.FileSize, DIR_FileSize, 1, fatcat.img);
 
-
 	if(checkdirerr(dir)){
 		dir.name[0] = 0x7C;
 		return dir;
@@ -152,10 +151,9 @@ struct directory parsedir(unsigned long byte_addr, int print_values){
 	else if(!(dir.Attr ^ ATTR_DIRECTORY) || !(dir.Attr ^ ATTR_ARCHIVE))
 		setclus(&dir);
 
-#ifdef  _DEBUGGING
-	printf("\nByte Address Read: 0x%07lx", byte_addr);
+#ifdef  _DEBUGGING_F
+	// printf("\nByte Address Read: 0x%07lx", byte_addr);
 #endif
-	PrintDirVerbose(dir);
 	return dir;
 }
 
@@ -174,7 +172,6 @@ unsigned int setclus(struct directory * dir){
 #endif
 		temp = FindClusterInfo(clusval);
 		memcpy(dir->cluster, &temp, sizeof(struct cluster));
-		printf("\nMemcpy SUCCEEDED\n");
 		return 0;
 }
 

@@ -21,7 +21,7 @@
 #define MAX_HEAP_SIZE 255
 #define MAX_ADDR_NAME 16
 #define DEFAULT_ALLOC 255
-#define EOC 268435448	// End Of Cluster
+#define EOC 0xFFFFFF8	// End Of Cluster
 #define ATTR_READ_ONLY 0x01
 #define ATTR_HIDDEN 0x02
 #define ATTR_SYSTEM 0x04
