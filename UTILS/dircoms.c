@@ -19,9 +19,7 @@
 #define DIR_WrtDate 2
 #define DIR_FstClusLO 2
 #define DIR_FileSize 4
-
 #define DIR_SIZE 32
-
 #define EXT 8
 #define NAMELEN 11
 
@@ -32,19 +30,17 @@ int PrintDirectory(char args[][ACOLS]){
 		printf("Args[1] == %d\n", args[1][0]);
 		return 0;
 	} else {
-		status = printContents(*fatcat.curClus);
+		status = printDirectoryCurrent(*fatcat.curDir);
 	}
 
 	return status;
 }
 
 void ChangeDirectory(char args[][ACOLS]){
-	struct cluster * newclus = malloc(sizeof(struct cluster));
+	int result = -2;
 	char * name = malloc(sizeof(char) * strlen(args[1]));
 
 	strcpy(name, args[1]);
-	int result = -2;
-
 	if(strlen(name) == 0){
 		printf("\nUsage: cd <directory_name>");
 		return;
@@ -55,7 +51,7 @@ void ChangeDirectory(char args[][ACOLS]){
 		name[i] = toupper(name[i]);
 	}
 
-	result = findDirectory(*fatcat.curClus, name);
+	result = findDirectory(*fatcat.curDir, name);
 
 	if(!result){
 		printf("\n%s was found as entry", name);
@@ -68,14 +64,14 @@ void ChangeDirectory(char args[][ACOLS]){
 }
 
 // CHANGE TO DIRECTORY, ABSTRACT THE CLUSTERS
-int findDirectory(struct cluster cluster, char * name){
+int findDirectory(struct directory current, char * name){
 	int endofdir = 0;
 	unsigned long byte_addr = 0;
 	struct directory dir;
 	char dirName[12];
 
-	for(int i=0; i < cluster.clusterNum; i++){
-		byte_addr = cluster.firstSectors[i] * BPB_BytesPerSec;
+	for(int i=0; i < current.cluster->clusterNum; i++){
+		byte_addr = current.cluster->firstSectors[i] * BPB_BytesPerSec;
 
 		while(!endofdir){
 			dir = parseDirectoryEntry(byte_addr, 0);
@@ -101,14 +97,14 @@ struct cluster findCluster(struct directory dir){
 		return newclus;
 }
 
-int printContents(struct cluster cluster){
+int printDirectoryCurrent(struct directory current){
 	int endofdir = 0;
 	int linecount = 1;
 	struct directory curdir;
 	unsigned long byte_addr = 0;
 
-	for(int i=0; i < cluster.clusterNum; i++){
-		byte_addr = cluster.firstSectors[i] * BPB_BytesPerSec;
+	for(int i=0; i < current.cluster->clusterNum; i++){
+		byte_addr = current.cluster->firstSectors[i] * BPB_BytesPerSec;
 
 		while(!endofdir){
 			linecount %= 8;
@@ -223,7 +219,6 @@ void PrintDirStandard(struct directory dir){
 	printf("%s", name);
 	if(dir.Attr & ATTR_DIRECTORY) printf("/");
 	printf("\t");
-
 }
 
 

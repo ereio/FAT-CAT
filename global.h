@@ -59,7 +59,7 @@ struct directory{
 	unsigned short FstClusLO;
 	unsigned int FileSize;
 	unsigned int Mode;
-	struct cluster cluster;
+	struct cluster * cluster;
 };
 
 struct fatcat{
@@ -68,8 +68,6 @@ struct fatcat{
     unsigned int firstDataSector;
     unsigned int dataSectors;
     unsigned int dataClusters;
-    struct cluster root;
-    struct cluster * curClus;
     struct directory * curDir;
 	char * dirName;
 };

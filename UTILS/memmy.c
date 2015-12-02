@@ -94,9 +94,8 @@ int init_memmy(){
 		OPENFILES[i].name[0] = '\0';
 	}
 
-	fatcat.curClus = malloc(sizeof(struct cluster));
-
 	fatcat.curDir = malloc(sizeof(struct directory));
+	fatcat.curDir->cluster = malloc(sizeof(struct cluster));
 
 	return 1;
 }
@@ -112,7 +111,7 @@ int purge_memmy(){
 			return -1;
 	}
 
-	free(fatcat.curClus);
+	free(fatcat.curDir->cluster);
 	free(fatcat.curDir);
 
 	return 0;

@@ -1,11 +1,14 @@
 #ifndef _DIRCOMS
 #define _DIRCOMS
 
-int printContents(struct cluster cluster);
-int findDirectory(struct cluster cluster, char * name);
-struct cluster findCluster(struct directory dir);
+int printDirectoryCurrent(struct directory current);
+int printDirectory(struct directory current, char * name);
+int findDirectory(struct directory current, char * name);
 
 struct directory parseDirectoryEntry(unsigned long sector, int print);
+struct cluster findCluster(struct directory dir);
+
+
 int ErrorCheckDirectory(struct directory dir);
 
 void ConvertDirName(struct directory dir, char * name);

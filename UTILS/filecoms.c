@@ -15,7 +15,7 @@ int openFile(char args[][ACOLS]) {
 	char * fileName = args[1][0];
 	// *** WARNING ***
 	// Directory organization needs to be discussed before proceeding
-	unsigned long byte_addr = fatcat.curClus->firstSectors[0] * BPB_BytesPerSec;
+	unsigned long byte_addr = fatcat.curDir->cluster->firstSectors[0] * BPB_BytesPerSec;
 	unsigned char free = 0x01;
 	int endofdir = 0;
 	int linecount = 1;

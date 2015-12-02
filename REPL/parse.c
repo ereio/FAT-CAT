@@ -42,12 +42,12 @@ void parse_arguments(char* input, char args[][ACOLS]) {
 }
 
 void resolve_paths(char args[][ACOLS]) {
-	char* BACK = "..";
-	char* CURR = ".";
+//	char* BACK = "..";
+//	char* CURR = ".";
 	char* NL = "\n";
 
 	int i;
-	int hit;
+//	int hit;
 
 	if(strcmp(args[0], NL) == 0) return;
 

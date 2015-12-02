@@ -127,6 +127,9 @@ int PrintBootSectInfo() {
 clusters including the two reserved clusters” is CountofClusters + 2.
 */
 int SetRootDir(FILE * img) {
+
+	struct cluster temp;
+
 	fatcat.rootDirSectors = ((BPB_RootEntCnt * 32) + (BPB_BytesPerSec - 1)) / BPB_BytesPerSec;
 
 	fatcat.firstDataSector = BPB_RsvdSecCnt + (BPB_NumFATs * BPB_FATSz32) + fatcat.rootDirSectors;
@@ -137,9 +140,9 @@ int SetRootDir(FILE * img) {
 
 	if(fatcat.dataClusters < 65526) return -1;
 
-	fatcat.root = FindClusterInfo(BPB_RootClus);
+	temp = FindClusterInfo(BPB_RootClus);
 
-	memcpy(fatcat.curClus, &fatcat.root, sizeof(struct cluster));
+	memcpy(fatcat.curDir->cluster, &temp, sizeof(struct cluster));
 
 	fatcat.dirName = "/";
 
