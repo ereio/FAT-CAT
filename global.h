@@ -12,6 +12,10 @@
 //#define _DEBUGGING	// Comment out for less output
 //#endif
 
+#ifndef _DEBUGGING_F
+#define _DEBUGGING_F	// Comment out for less output
+#endif
+
 #include <sys/types.h>
 /* Defines  */
 #define MAX_HEAP_SIZE 255
@@ -28,6 +32,8 @@
 #define R 0
 #define W 1
 #define RW 2
+#define DIR_ERROR 0x7C
+#define DIR_EMPTY 0x00
 
 /* Structures  */
 struct address{
@@ -84,6 +90,7 @@ extern const char* MKDIR;
 extern const char* RMDIR;
 extern const char* READ;
 extern const char* WRITE;
+extern const char* SIZE;
 
 /* Constant and Labels */
 extern const char* PREV_DIR;

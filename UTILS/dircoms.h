@@ -1,17 +1,14 @@
 #ifndef _DIRCOMS
 #define _DIRCOMS
 
-int printDirectoryCurrent(struct directory current);
-int printDirectory(struct directory current, char * name);
-int findDirectory(struct directory current, char * name);
-
-struct directory parseDirectoryEntry(unsigned long sector, int print);
-struct cluster findCluster(struct directory dir);
+int printdir(struct directory current);
+struct directory finddir(struct directory current, char * name);
+struct directory parsedir(unsigned long sector, int print);
 
 
-int ErrorCheckDirectory(struct directory dir);
-
-void ConvertDirName(struct directory dir, char * name);
+int checkdirerr(struct directory dir);
+void convertdirname(struct directory dir, char * name);
+unsigned int setclus(struct directory * dir);
 
 int PrintDirectory(char args[][ACOLS]);
 void ChangeDirectory(char args[][ACOLS]);

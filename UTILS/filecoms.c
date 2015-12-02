@@ -25,8 +25,8 @@ int openFile(char args[][ACOLS]) {
 
         while(!endofdir){
                 linecount %= 8;
-                curdir = parseDirectoryEntry(byte_addr, 0);
-                if(ErrorCheckDirectory(curdir)) return -1;
+                curdir = parsedir(byte_addr, 0);
+                if(checkdirerr(curdir)) return -1;
                 free = curdir.name[0];
 
                 if(free == 0xE5 || free == 0x00){
@@ -59,4 +59,10 @@ int openFile(char args[][ACOLS]) {
 	}
 
 	return 0;
+}
+
+int sizeFile(char args[][ACOLS]){
+
+
+	return -1;
 }

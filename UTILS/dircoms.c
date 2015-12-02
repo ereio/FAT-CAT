@@ -30,15 +30,16 @@ int PrintDirectory(char args[][ACOLS]){
 		printf("Args[1] == %d\n", args[1][0]);
 		return 0;
 	} else {
-		status = printDirectoryCurrent(*fatcat.curDir);
+		status = printdir(*fatcat.curDir);
 	}
 
 	return status;
 }
 
 void ChangeDirectory(char args[][ACOLS]){
-	int result = -2;
+	struct directory dest;
 	char * name = malloc(sizeof(char) * strlen(args[1]));
+	dest.name[0] = 0x00;	// Allows distinction if dir is set
 
 	strcpy(name, args[1]);
 	if(strlen(name) == 0){
@@ -51,11 +52,12 @@ void ChangeDirectory(char args[][ACOLS]){
 		name[i] = toupper(name[i]);
 	}
 
-	result = findDirectory(*fatcat.curDir, name);
+	// add name parsing by slashes, right now depth is 1
+	dest = finddir(*fatcat.curDir, name);
 
-	if(!result){
-		printf("\n%s was found as entry", name);
-
+	if(dest.name[0] != DIR_EMPTY && dest.name[0] != DIR_ERROR){
+		printf("\n%s was found as entry\n", name);
+		memcpy(fatcat.curDir, &dest, sizeof(struct directory));
 	} else {
 		printf("\n%s is not a directory", name);
 	}
@@ -63,41 +65,7 @@ void ChangeDirectory(char args[][ACOLS]){
 	free(name);
 }
 
-// CHANGE TO DIRECTORY, ABSTRACT THE CLUSTERS
-int findDirectory(struct directory current, char * name){
-	int endofdir = 0;
-	unsigned long byte_addr = 0;
-	struct directory dir;
-	char dirName[12];
-
-	for(int i=0; i < current.cluster->clusterNum; i++){
-		byte_addr = current.cluster->firstSectors[i] * BPB_BytesPerSec;
-
-		while(!endofdir){
-			dir = parseDirectoryEntry(byte_addr, 0);
-			if(ErrorCheckDirectory(dir)) return -1;
-
-			if(dir.Attr & ATTR_DIRECTORY){
-				ConvertDirName(dir, dirName);
-				if(!strcmp(dirName, name)){
-					return 0;
-				}
-			}
-			byte_addr += DIR_SIZE;
-			endofdir = dir.name[0] == 0x00 ? 1 : 0;
-		}
-	}
-
-	return 1;
-}
-
-struct cluster findCluster(struct directory dir){
-		struct cluster newclus;
-
-		return newclus;
-}
-
-int printDirectoryCurrent(struct directory current){
+int printdir(struct directory current){
 	int endofdir = 0;
 	int linecount = 1;
 	struct directory curdir;
@@ -108,8 +76,11 @@ int printDirectoryCurrent(struct directory current){
 
 		while(!endofdir){
 			linecount %= 8;
-			curdir = parseDirectoryEntry(byte_addr, 1);
-			if(ErrorCheckDirectory(curdir)) return -1;
+			curdir = parsedir(byte_addr, 1);
+			if(curdir.name[0] == DIR_ERROR){
+				printf("\nAn invalid directory was encountered");
+				return -1;
+			}
 			if(linecount % 8 == 0) printf("\n");
 			byte_addr += 32;
 			linecount++;
@@ -120,8 +91,40 @@ int printDirectoryCurrent(struct directory current){
 	return 0;
 }
 
-struct directory parseDirectoryEntry(unsigned long byte_addr, int print_values){
+// Will return a directory regardless of what is found but if the directory
+// is not found, it will return an empty directory with a name value of
+// 0x00000000. <dir_var>.name[0] == 0x00 can determine if not found
+struct directory finddir(struct directory current, char * name){
+	int endofdir = 0;
+	unsigned long byte_addr = 0;
 	struct directory dir;
+	char dirName[12];
+
+	for(int i=0; i < current.cluster->clusterNum; i++){
+		byte_addr = current.cluster->firstSectors[i] * BPB_BytesPerSec;
+
+		while(!endofdir){
+			dir = parsedir(byte_addr, 0);
+			if(dir.name[0] == DIR_ERROR) printf("\nAn invalid directory was encountered");
+
+			if(dir.Attr & ATTR_DIRECTORY){
+				convertdirname(dir, dirName);
+				if(!strcmp(dirName, name)){
+					return dir;
+				}
+			}
+			byte_addr += DIR_SIZE;
+			endofdir = dir.name[0] == 0x00 ? 1 : 0;
+			if(dir.cluster != NULL) free(dir.cluster);
+		}
+	}
+
+	return dir;
+}
+
+struct directory parsedir(unsigned long byte_addr, int print_values){
+	struct directory dir;
+	dir.cluster = NULL;
 
 	fseek(fatcat.img, byte_addr, SEEK_SET);
 
@@ -138,16 +141,46 @@ struct directory parseDirectoryEntry(unsigned long byte_addr, int print_values){
 	fread(&dir.FstClusLO, DIR_FstClusLO, 1, fatcat.img);
 	fread(&dir.FileSize, DIR_FileSize, 1, fatcat.img);
 
+
+	if(checkdirerr(dir)){
+		dir.name[0] = 0x7C;
+		return dir;
+	}
+
+	if (print_values)
+		PrintDirStandard(dir);
+	else if(!(dir.Attr ^ ATTR_DIRECTORY) || !(dir.Attr ^ ATTR_ARCHIVE))
+		setclus(&dir);
+
 #ifdef  _DEBUGGING
 	printf("\nByte Address Read: 0x%07lx", byte_addr);
-	PrintDirVerbose(dir);
 #endif
-	if (print_values) PrintDirStandard(dir);
-
+	PrintDirVerbose(dir);
 	return dir;
 }
 
-int ErrorCheckDirectory(struct directory dir){
+unsigned int setclus(struct directory * dir){
+		struct cluster temp;
+		unsigned int clusval = 0;
+
+		dir->cluster = malloc(sizeof(struct cluster));
+
+		clusval = dir->FstClusHi;
+		clusval = clusval << 1;
+		clusval = clusval | dir->FstClusLO;
+
+#ifdef  _DEBUGGING
+		printf("\nCLUSTER VALUE: %d\n", clusval);
+#endif
+
+		printf("\nCLUSTER VALUE: %d\n", clusval);
+		temp = FindClusterInfo(clusval);
+		memcpy(dir->cluster, &temp, sizeof(struct cluster));
+		printf("\nMemcpy SUCCEEDED\n");
+		return 0;
+}
+
+int checkdirerr(struct directory dir){
 	if(dir.name[0] < 0x20 && !(dir.name[0] == 0x00)) return -1;
 	for(int i=0; i < 11; i++){
 		if( dir.name[i] == 0x22 ||
@@ -173,23 +206,8 @@ int ErrorCheckDirectory(struct directory dir){
 	return 0;
 }
 
-void PrintDirVerbose(struct directory dir){
-	printf("\nDIR_Name:%s", dir.name);
-	printf("\nDIR_Attr: 0x%x", dir.Attr);
-	printf("\nDIR_NTRes: 0x%x", dir.NTRes);
-	printf("\nDIR_CrtTimeTenth:0x%x", dir.CrtTimeTenth);
-	printf("\nDIR_CrtTime: 0x%x", dir.CrtTime);
-	printf("\nDIR_CrtDate: 0x%x", dir.CrtDate);
-	printf("\nDIR_LstAccDate: 0x%x", dir.LstAccDate);
-	printf("\nDIR_FstClusHI: 0x%x", dir.FstClusHi);
-	printf("\nDIR_WrtTime: 0x%x", dir.WrtTime);
-	printf("\nDIR_WrtDate 0x:%x", dir.WrtDate);
-	printf("\nDIR_FstClusLO: 0x%x", dir.FstClusLO);
-	printf("\nDIR_FileSize:0x%x\n", dir.FileSize);
-}
-
 // Needed for comparisons in cd
-void ConvertDirName(struct directory dir, char * name){
+void convertdirname(struct directory dir, char * name){
 	char * str = dir.name;
 	char temp[12] = {"\0"};
 	int namepos = 0;
@@ -211,11 +229,27 @@ void ConvertDirName(struct directory dir, char * name){
 		namepos = sprintf(name, "%s", temp);
 		if (ext[0] != '\0') sprintf(name+namepos, ".%s", ext);
 	}
+	name[11] = '\0';
+}
+
+void PrintDirVerbose(struct directory dir){
+	printf("\nDIR_Name:%s", dir.name);
+	printf("\nDIR_Attr: 0x%x", dir.Attr);
+	printf("\nDIR_NTRes: 0x%x", dir.NTRes);
+	printf("\nDIR_CrtTimeTenth:0x%x", dir.CrtTimeTenth);
+	printf("\nDIR_CrtTime: 0x%x", dir.CrtTime);
+	printf("\nDIR_CrtDate: 0x%x", dir.CrtDate);
+	printf("\nDIR_LstAccDate: 0x%x", dir.LstAccDate);
+	printf("\nDIR_FstClusHI: 0x%x", dir.FstClusHi);
+	printf("\nDIR_WrtTime: 0x%x", dir.WrtTime);
+	printf("\nDIR_WrtDate 0x:%x", dir.WrtDate);
+	printf("\nDIR_FstClusLO: 0x%x", dir.FstClusLO);
+	printf("\nDIR_FileSize:0x%x\n", dir.FileSize);
 }
 
 void PrintDirStandard(struct directory dir){
 	char name[12] = {"\0"};
-	ConvertDirName(dir, name);
+	convertdirname(dir, name);
 	printf("%s", name);
 	if(dir.Attr & ATTR_DIRECTORY) printf("/");
 	printf("\t");

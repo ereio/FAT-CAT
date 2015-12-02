@@ -19,6 +19,7 @@
 const char* OPEN  = "exit";
 const char* CLOSE  = "close";
 const char* CREATE  = "create";
+const char* SIZE = "size";
 const char* RM  = "rm";
 const char* CD = "cd";
 const char* LS = "ls";

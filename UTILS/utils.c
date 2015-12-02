@@ -172,7 +172,6 @@ struct cluster FindClusterInfo(unsigned int cluster){
 
 	while(more){
 		fatOffset = cluster * 4;
-
 		// Finds first data sector for cluster / cluster chain node
 		info.firstSectors[info.clusterNum] = FindFirstSector(cluster);
 		info.sectorNums[info.clusterNum] = BPB_RsvdSecCnt + (fatOffset / BPB_BytesPerSec);	// sector of cluster chain info
@@ -189,7 +188,7 @@ struct cluster FindClusterInfo(unsigned int cluster){
 		more = next_cluster != EOC;
 		if(more) cluster = next_cluster;
 
-#ifdef _DEBUGGING
+#ifdef _DEBUGGING_F
 		printf("\nFatOffset: 0x%x", fatOffset);
 		printf("\nThisFATSecNum: 0x%x", info.sectorNums[info.clusterNum]);
 		printf("\nThisFATEntOff: 0x%x", info.entryOffset[info.clusterNum]);
