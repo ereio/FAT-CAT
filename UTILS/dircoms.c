@@ -169,11 +169,9 @@ unsigned int setclus(struct directory * dir){
 		clusval = clusval << 1;
 		clusval = clusval | dir->FstClusLO;
 
-#ifdef  _DEBUGGING
+#ifdef  _DEBUGGING_F
 		printf("\nCLUSTER VALUE: %d\n", clusval);
 #endif
-
-		printf("\nCLUSTER VALUE: %d\n", clusval);
 		temp = FindClusterInfo(clusval);
 		memcpy(dir->cluster, &temp, sizeof(struct cluster));
 		printf("\nMemcpy SUCCEEDED\n");
