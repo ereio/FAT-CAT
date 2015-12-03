@@ -24,8 +24,6 @@ int openFile(char args[][ACOLS]) {
 		char * mode = malloc(sizeof(char) * strlen(args[2]));
 		strcpy(mode, args[2]);
 
-		printf("mode: %s\n", mode);
-
 		if (!strcmp(mode, "r"))
 			found_dir.Mode = R;
 		else if (!strcmp(mode, "rw") || !strcmp(mode, "wr"))
@@ -37,6 +35,13 @@ int openFile(char args[][ACOLS]) {
 			return 0;
 		}
 
+		printf("num: %d\n", num_open_files);
+
+		if (checkFile(found_dir) != -1) {
+			printf("File %s already open\n", fileName);
+			return 0;
+		}
+
 		OPENFILES[num_open_files] = found_dir;
 		num_open_files++;
 	}
@@ -45,6 +50,78 @@ int openFile(char args[][ACOLS]) {
 	}
 
 	return 0;
+}
+
+// returns -1 if not open
+// returns R for open - read
+// returns RW for open - read/write
+// returns W for open - write
+int checkFile(struct directory dir) {
+	int i;
+	for (i = 0; i < num_open_files; i++) {
+		if (!(strcmp(OPENFILES[i].name, dir.name)) &&
+				OPENFILES[i].Attr == dir.Attr &&
+				OPENFILES[i].FileSize == dir.FileSize &&
+				OPENFILES[i].FstClusHi == dir.FstClusHi &&
+				OPENFILES[i].FstClusLO == dir.FstClusLO) {
+			return OPENFILES[i].Mode;
+		}
+	}
+
+	return -1;
+}
+
+void removeFile(struct directory dir) {
+	int i;
+	int j;
+	int k;
+	struct directory tmp;
+
+	for (i = 0; i < num_open_files; i++) {
+		if (!(strcmp(OPENFILES[i].name, dir.name)) &&
+				OPENFILES[i].Attr == dir.Attr &&
+				OPENFILES[i].FileSize == dir.FileSize &&
+				OPENFILES[i].FstClusHi == dir.FstClusHi &&
+				OPENFILES[i].FstClusLO == dir.FstClusLO) {
+			for (j = i; j < num_open_files; j++) {
+				for (k = j + 1; k < num_open_files; k++) {
+					OPENFILES[j] = OPENFILES[k];
+				}
+			}
+
+			OPENFILES[num_open_files] = tmp;
+
+			num_open_files--;
+			return;
+		}
+	}
+
+	return;
+}
+
+void closeFile(char args[][ACOLS]) {
+	char * fileName = malloc(sizeof(char) * strlen(args[1]));
+	strcpy(fileName, args[1]);
+	struct directory found_dir;
+	found_dir = finddir(*fatcat.curDir, ATTR_ALL, fileName);
+	if (found_dir.name[0] == 0x00 || (found_dir.Attr & ATTR_LONG_NAME)) {
+		printf("%s does not exist in this directory\n", fileName);
+		return;
+	}
+
+	if (!(found_dir.Attr & ATTR_DIRECTORY)) {
+		if (checkFile(found_dir) != -1) {
+			removeFile(found_dir);
+			return;
+		}
+
+		printf("File %s is not open\n", fileName);
+	}
+	else {
+		printf("%s is a directory\n", fileName);
+	}
+
+	return;
 }
 
 int sizeFile(char args[][ACOLS]){
