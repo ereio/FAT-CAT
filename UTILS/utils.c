@@ -17,8 +17,8 @@ int LoadImage(FILE * img) {
 	int status = 0;
 
 	status = LoadBPB(img);
-	status = LoadFSInfo(img);
 	status = SetRootDir(img);
+	status = LoadFSInfo(img);
 
 	if(status != 0) printf("\n\nLoadImage error: %d\n", status);
 
@@ -65,10 +65,12 @@ int LoadBPB(FILE * img) {
 }
 
 int LoadFSInfo(FILE * img) {
+	struct cluster temp;
+
 	fseek(img, BPB_FSInfo * BPB_BytesPerSec, SEEK_SET);
 	fread(&fatcat.fsinfo.FSI_LeadSig, 4, 1, img);
 
-	fseek(img, 476, SEEK_CUR);
+	fseek(img, 480, SEEK_CUR);
 	fread(&fatcat.fsinfo.FSI_StrcSig, 4, 1, img);
 	fread(&fatcat.fsinfo.FSI_Free_Count, 4, 1, img);
 	fread(&fatcat.fsinfo.FSI_Nxt_Free, 4, 1, img);
@@ -76,9 +78,16 @@ int LoadFSInfo(FILE * img) {
 	fseek(img, 12, SEEK_CUR);
 	fread(&fatcat.fsinfo.FSI_TrailSig, 4, 1, img);
 
+	temp = FindClusterInfo(fatcat.fsinfo.FSI_Nxt_Free);
+
 #ifdef _DEBUGGING_BOOT_SECT
-	printf("\n\nNext Free Cluster: %d\n", fatcat.fsinfo.FSI_Nxt_Free);
-	printf("\n\nLast Free Cluster: %d\n", fatcat.fsinfo.FSI_Free_Count);
+	printf("\nFSI_LeadSig: 0x%x", fatcat.fsinfo.FSI_LeadSig);
+	printf("\nFSI_StrcSig: 0x%x", fatcat.fsinfo.FSI_StrcSig);
+	printf("\nFSI_TrailSig: 0x%x", fatcat.fsinfo.FSI_TrailSig);
+
+	printf("\n\nNext Free Cluster: %d", fatcat.fsinfo.FSI_Nxt_Free);
+	printf("\nLast Free Cluster: %d", fatcat.fsinfo.FSI_Free_Count);
+	printf("\nNext Free Address: 0x%x", fatcat.fsinfo.TEST);
 #endif
 	return 0;
 }
@@ -172,7 +181,7 @@ struct cluster FindClusterInfo(unsigned int cluster){
 		more = next_cluster < EOC;
 		if(more) cluster = next_cluster;
 
-#ifdef _DEBUGGING
+#ifdef _DEBUGGING_BOOT_SECT
 		printf("\n\nCLUSTER USED:%d", cluster);
 		printf("\nFatOffset: 0x%x", fatOffset);
 		printf("\nThisFATSecNum: 0x%x", info.sectorNums[info.clusterNum]);

@@ -5,7 +5,7 @@
 #endif
 
 #ifndef _DEBUGGING_BOOT_SECT
-#define _DEBUGGING_BOOT_SECT	// Comment out for less output
+//#define _DEBUGGING_BOOT_SECT	// Comment out for less output
 #endif
 
 //#ifndef _DEBUGGING
@@ -59,6 +59,7 @@ struct fsinfo{
 
 	unsigned int FSI_Free_Count;
 	unsigned int FSI_Nxt_Free;
+	unsigned int TEST;
 };
 struct directory{
 	char name[11];
