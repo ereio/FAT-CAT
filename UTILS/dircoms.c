@@ -83,6 +83,9 @@ void CreateDirectory(char args[][ACOLS]){
 	if(strlen(args[1]) == 0){
 		printf("\nUsage: mkdir <directory_name>");
 		return;
+	} else if(strlen(name) > 12){
+		printf("\nDirectory name is too long, 12 characters or less\n");
+		return;
 	}
 
 	strcpy(name, args[1]);
@@ -93,6 +96,7 @@ void CreateDirectory(char args[][ACOLS]){
 
 	if(temp.name[0] == DIR_EMPTY && temp.name[0] == DIR_ERROR){
 		PrintDirVerbose(temp);
+		makedir(*fatcat.curDir, name);
 	} else if(temp.Attr == ATTR_DIRECTORY){
 		printf("\n%s is already a local directory\n", name);
 	} else {
@@ -100,8 +104,8 @@ void CreateDirectory(char args[][ACOLS]){
 	}
 
 	free(name);
-
 }
+
 int printdir(struct directory current){
 	int endofdir = 0;
 	int linecount = 1;
@@ -206,7 +210,7 @@ struct directory parsedir(unsigned long byte_addr){
 	return dir;
 }
 
-struct directory makedir(){
+struct directory makedir(struct directory current, char * name){
 	struct directory temp;
 
 	return temp;
