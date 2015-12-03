@@ -5,7 +5,7 @@
 #endif
 
 #ifndef _DEBUGGING_BOOT_SECT
-//#define _DEBUGGING_BOOT_SECT	// Comment out for less output
+#define _DEBUGGING_BOOT_SECT	// Comment out for less output
 #endif
 
 //#ifndef _DEBUGGING
@@ -22,6 +22,9 @@
 #define MAX_ADDR_NAME 16
 #define DEFAULT_ALLOC 255
 #define EOC 0xFFFFFF8	// End Of Cluster
+#define LEAD_SIG_VAL 0x41615252
+#define STRUC_SIG_VAL 0x61417272
+#define HIGH_DATE
 #define ATTR_ALL 0xFF
 #define ATTR_READ_ONLY 0x01
 #define ATTR_HIDDEN 0x02
@@ -35,6 +38,7 @@
 #define RW 2
 #define DIR_ERROR 0x7C
 #define DIR_EMPTY 0x00
+#define DIR_NOTFOUND ' '
 
 #define DIR_INVALIDS 0x20
 
@@ -59,7 +63,6 @@ struct fsinfo{
 
 	unsigned int FSI_Free_Count;
 	unsigned int FSI_Nxt_Free;
-	unsigned int TEST;
 };
 struct directory{
 	char name[11];

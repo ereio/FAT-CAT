@@ -52,3 +52,39 @@ int sizeFile(char args[][ACOLS]){
 
 	return -1;
 }
+
+int removeFile(char args[][ACOLS]){
+	struct directory found_dir;
+	unsigned int clusval = 0;
+	char * fileName = malloc(sizeof(char) * strlen(args[1]));
+
+	strcpy(fileName, args[1]);
+	found_dir = finddir(*fatcat.curDir, ATTR_ALL, fileName);
+
+	if (found_dir.name[0] == 0x00 || (found_dir.Attr & ATTR_LONG_NAME)) {
+		printf("%s does not exist in this directory\n", fileName);
+		return 0;
+	}
+
+	if (!(found_dir.Attr & ATTR_DIRECTORY)) {
+		printf("%s is a directory\n", fileName);
+		return 0;
+	}
+
+	if(found_dir.name[0] != ' ') {
+		clusval = found_dir.FstClusHi;
+		clusval = clusval << 1;
+		clusval = clusval | found_dir.FstClusLO;
+		for(int i=0; i < found_dir.cluster->clusterNums; i++)
+			temp = freecluschain(cusval)
+	}
+
+	return 0;
+}
+
+
+
+
+
+
+
