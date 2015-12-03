@@ -55,7 +55,7 @@ void ChangeDirectory(char args[][ACOLS]){
 	}
 
 	// add name parsing by slashes, right now depth is 1
-	dest = finddir(*fatcat.curDir, name);
+	dest = finddir(*fatcat.curDir, ATTR_DIRECTORY, name);
 
 	if(dest.name[0] != DIR_EMPTY && dest.name[0] != DIR_ERROR){
 		printf("\n%s was found as entry\n", name);
@@ -97,7 +97,7 @@ int printdir(struct directory current){
 // Will return a directory regardless of what is found but if the directory
 // is not found, it will return an empty directory with a name value of
 // 0x00000000. <dir_var>.name[0] == 0x00 can determine if not found
-struct directory finddir(struct directory current, char * name){
+struct directory finddir(struct directory current, unsigned int attr, char * name){
 	int endofdir = 0;
 	unsigned long byte_addr = 0;
 	struct directory dir;
@@ -110,7 +110,7 @@ struct directory finddir(struct directory current, char * name){
 			dir = parsedir(byte_addr, 0);
 			if(dir.name[0] == DIR_ERROR) printf("\nAn invalid directory was encountered");
 
-			if(dir.Attr & ATTR_DIRECTORY){
+			if(dir.Attr & attr){
 				convertdirname(dir, dirName);
 				if(!strcmp(dirName, name)){
 					return dir;

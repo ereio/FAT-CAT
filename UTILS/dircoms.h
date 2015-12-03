@@ -2,7 +2,7 @@
 #define _DIRCOMS
 
 int printdir(struct directory current);
-struct directory finddir(struct directory current, char * name);
+struct directory finddir(struct directory current, unsigned int attr,  char * name);
 struct directory parsedir(unsigned long sector, int print);
 
 
