@@ -22,6 +22,7 @@
 #define MAX_ADDR_NAME 16
 #define DEFAULT_ALLOC 255
 #define EOC 0xFFFFFF8	// End Of Cluster
+#define ATTR_ALL 0xFF
 #define ATTR_READ_ONLY 0x01
 #define ATTR_HIDDEN 0x02
 #define ATTR_SYSTEM 0x04
@@ -34,6 +35,7 @@
 #define RW 2
 #define DIR_ERROR 0x7C
 #define DIR_EMPTY 0x00
+
 #define DIR_INVALIDS 0x20
 
 /* Structures  */

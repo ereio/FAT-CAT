@@ -39,7 +39,7 @@ int _prompt(char** settings)
 		strcpy(machine, "local\0");
 	}
 
-	printf("\n%s@%s: %s => ", cuser, machine, fatcat.dirName);
+	printf("%s@%s: %s => ", cuser, machine, fatcat.dirName);
 
 	return 0;
 }
@@ -76,7 +76,7 @@ int _execute(char args[][ACOLS])
 	else if(!strcmp(LS, args[0]))
 		PrintDirectory(args);
 	else if(!strcmp(MKDIR, args[0]))
-		template(args);
+		CreateDirectory(args);
 	else if(!strcmp(RMDIR, args[0]))
 		template(args);
 	else if(!strcmp(READ, args[0]))
@@ -94,5 +94,5 @@ int template(char args[][ACOLS]){
 }
 
 void invalid_command(){
-	printf("%s", "Invalid command: Type help for all commands\n");
+	printf("%s", "Invalid command: Type help for all commands");
 }

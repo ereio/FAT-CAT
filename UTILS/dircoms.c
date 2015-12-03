@@ -28,21 +28,25 @@ int PrintDirectory(char args[][ACOLS]){
 	char * name = malloc(sizeof(char) * strlen(args[1]));
 	struct directory temp;
 
-	if(args[1][0] != 0){
+	if(args[1][0] == 0){
+		status = printdir(*fatcat.curDir);
+	} else {
 		strcpy(name, args[1]);
 		nametofat(name);
 		temp = finddir(*fatcat.curDir, ATTR_DIRECTORY, name);
-		status = printdir(temp);
-		return status;
-	} else {
-		status = printdir(*fatcat.curDir);
+
+		if(temp.name[0] != DIR_EMPTY && temp.name[0] != DIR_ERROR)
+			status = printdir(temp);
+		else
+			printf("\n%s is not a directory\n", name);
 	}
 
+	printf("\n");
+	free(name);
 #ifdef _DEBUGGING
 	PrintDirVerbose(*fatcat.curDir);
 	printf("\nDIR cluster addr: 0x%x\n", fatcat.curDir->cluster->firstSectors[0]);
 #endif
-	free(name);
 	return status;
 }
 
@@ -63,15 +67,41 @@ void ChangeDirectory(char args[][ACOLS]){
 	dest = finddir(*fatcat.curDir, ATTR_DIRECTORY, name);
 
 	if(dest.name[0] != DIR_EMPTY && dest.name[0] != DIR_ERROR){
-		printf("\n%s was found as entry\n", name);
 		memcpy(fatcat.curDir, &dest, sizeof(struct directory));
 	} else {
-		printf("\n%s is not a directory", name);
+		printf("\n%s is not a directory\n", name);
 	}
 
 	free(name);
 }
 
+void CreateDirectory(char args[][ACOLS]){
+	struct directory temp;
+	char * name = malloc(sizeof(char) * strlen(args[1]));
+	temp.name[0] = 0x00;	// Allows distinction if dir is set from find
+
+	if(strlen(args[1]) == 0){
+		printf("\nUsage: mkdir <directory_name>");
+		return;
+	}
+
+	strcpy(name, args[1]);
+	nametofat(name);
+
+	// add name parsing by slashes, right now depth is 1
+	temp = finddir(*fatcat.curDir, ATTR_ALL, name);
+
+	if(temp.name[0] == DIR_EMPTY && temp.name[0] == DIR_ERROR){
+		PrintDirVerbose(temp);
+	} else if(temp.Attr == ATTR_DIRECTORY){
+		printf("\n%s is already a local directory\n", name);
+	} else {
+		printf("\n%s is already a local file name\n", name);
+	}
+
+	free(name);
+
+}
 int printdir(struct directory current){
 	int endofdir = 0;
 	int linecount = 1;
@@ -92,13 +122,13 @@ int printdir(struct directory current){
 				return -1;
 			}
 			PrintDirStandard(curdir);
-			if(linecount % 8 == 0) printf("\n");
 			cur_addr += DIR_SIZE;
-			linecount++;
 			endofdir = (curdir.name[0] == 0x00 ? 1 : 0) || (cur_addr == end_addr);
+
+			if(linecount % 8 == 0 && !endofdir) printf("\n");
+			linecount++;
 		}
 	}
-
 	return 0;
 }
 
@@ -121,11 +151,15 @@ struct directory finddir(struct directory current, unsigned int attr, char * nam
 			dir = parsedir(cur_addr);
 			if(dir.name[0] == DIR_ERROR) printf("\nAn invalid directory was encountered");
 
-			if(dir.Attr & attr){
+			// SIMPLIFY THIS
+			if(!(attr ^ ATTR_ALL)){
 				convertdirname(dir, dirName);
-				if(!strcmp(dirName, name)){
+				if(!strcmp(dirName, name))
 					return dir;
-				}
+			} else if(!(dir.Attr ^ attr)){
+				convertdirname(dir, dirName);
+				if(!strcmp(dirName, name))
+					return dir;
 			}
 			cur_addr += DIR_SIZE;
 			endofdir = (dir.name[0] == 0x00 ? 1 : 0) || (cur_addr == end_addr);
