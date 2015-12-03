@@ -68,7 +68,7 @@ unsigned int BS_BootSig = 0;
 unsigned int BS_VolID = 0;
 unsigned char BS_VolLab[11] = {0};
 unsigned char BS_FilSysType[8] = {0};
-struct directory OPENFILES[2048] = {0};
+struct directory OPENFILES[2048] = { 0 };
 
 /* ALL EXITING TASKS DONE HERE */
 int exit_shell(){
@@ -86,7 +86,7 @@ int main(int argc, char* args[])
 
 	printf("Initializing file system\n");
 
- 	if(!LoadImage(fatcat.img)) return 2; /* File system initialization*/
+ 	if(LoadImage(fatcat.img)) return 2; /* File system initialization*/
 
 	printf("Finished\n");
 

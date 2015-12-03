@@ -16,12 +16,11 @@ int LoadImage(FILE * img) {
 
 	int status = 0;
 
-	printf("Loading BPB\n");
 	status = LoadBPB(img);
-	printf("Setting root directory\n");
+	status = LoadFSInfo(img);
 	status = SetRootDir(img);
 
-	if(status != 0 && status != 1) printf("\n\nLoadImage error: %d\n", status);
+	if(status != 0) printf("\n\nLoadImage error: %d\n", status);
 
 #ifdef _DEBUGGING_BOOT_SECT
 	PrintBootSectInfo();
@@ -62,11 +61,27 @@ int LoadBPB(FILE * img) {
 	fread(&BS_VolLab, 1, 11, img);
 	fread(&BS_FilSysType, 1, 8, img);
 
-
-
 	return 0;
 }
 
+int LoadFSInfo(FILE * img) {
+	fseek(img, BPB_FSInfo * BPB_BytesPerSec, SEEK_SET);
+	fread(&fatcat.fsinfo.FSI_LeadSig, 4, 1, img);
+
+	fseek(img, 476, SEEK_CUR);
+	fread(&fatcat.fsinfo.FSI_StrcSig, 4, 1, img);
+	fread(&fatcat.fsinfo.FSI_Free_Count, 4, 1, img);
+	fread(&fatcat.fsinfo.FSI_Nxt_Free, 4, 1, img);
+
+	fseek(img, 12, SEEK_CUR);
+	fread(&fatcat.fsinfo.FSI_TrailSig, 4, 1, img);
+
+#ifdef _DEBUGGING_BOOT_SECT
+	printf("\n\nNext Free Cluster: %d\n", fatcat.fsinfo.FSI_Nxt_Free);
+	printf("\n\nLast Free Cluster: %d\n", fatcat.fsinfo.FSI_Free_Count);
+#endif
+	return 0;
+}
 /*
  * Note also that the CountofClusters value is exactly that—the count of data
  * clusters starting at cluster
@@ -93,12 +108,14 @@ int SetRootDir(FILE * img) {
 
 	fatcat.dirName = "/";
 
+#ifdef _DEBUGGING_F
 	printf("\n\nRoot Directory Address: %d", fatcat.rootDirSectors);
 	printf("\nFirst Data Sector: 0x%x", fatcat.firstDataSector);
 	printf("\nTotal Data Sectors: %d", fatcat.dataSectors);
 	printf("\nTotal Data Clusters: %d\n\n", fatcat.dataClusters);
+#endif
 
-	return 1;
+	return 0;
 }
 
 void nametofat(char * name){
@@ -224,7 +241,10 @@ int PrintBootSectInfo(){
 	for (int i = 0; i < 8; i++)
 		printf("%c", BS_FilSysType[i]);
 
-	printf("\n");
+	printf("\n\n");
+
+
+
 	return 0;
 }
 

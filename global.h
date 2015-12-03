@@ -5,7 +5,7 @@
 #endif
 
 #ifndef _DEBUGGING_BOOT_SECT
-//#define _DEBUGGING_BOOT_SECT	// Comment out for less output
+#define _DEBUGGING_BOOT_SECT	// Comment out for less output
 #endif
 
 //#ifndef _DEBUGGING
@@ -52,6 +52,14 @@ struct cluster{
 	unsigned int clusterNum;
 };
 
+struct fsinfo{
+	unsigned int FSI_LeadSig;
+	unsigned int FSI_StrcSig;
+	unsigned int FSI_TrailSig;
+
+	unsigned int FSI_Free_Count;
+	unsigned int FSI_Nxt_Free;
+};
 struct directory{
 	char name[11];
 	char Attr;
@@ -77,6 +85,7 @@ struct fatcat{
     unsigned int firstDataSector;
     unsigned int dataSectors;
     unsigned int dataClusters;
+    struct fsinfo fsinfo;
     struct directory * curDir;
 	char * dirName;
 };
@@ -108,7 +117,6 @@ extern char* cuser;
 /* Globals  */
 extern struct directory OPENFILES[2048];
 extern int num_open_files;
-
 extern struct address * ADDRS;
 extern struct fatcat fatcat;
 

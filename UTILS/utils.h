@@ -2,6 +2,7 @@
 #define _UTILS
 
 int LoadImage(FILE * img);
+int LoadFSInfo(FILE * img);
 int LoadBPB(FILE * img);
 int PrintBootSectInfo();
 int SetRootDir();

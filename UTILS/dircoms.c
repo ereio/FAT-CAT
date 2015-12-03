@@ -215,6 +215,7 @@ struct directory parsedir(unsigned long byte_addr){
 struct directory makedir(struct directory current, char * name){
 	struct directory temp;
 
+
 	return temp;
 }
 
