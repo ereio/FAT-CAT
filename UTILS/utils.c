@@ -154,6 +154,7 @@ int SetRootDir(FILE * img) {
 	return 1;
 }
 
+
 unsigned int FindFirstSector(unsigned int cluster){
 	unsigned int firstSector = 0;
 
@@ -188,13 +189,14 @@ struct cluster FindClusterInfo(unsigned int cluster){
 		more = next_cluster < EOC;
 		if(more) cluster = next_cluster;
 
-#ifdef _DEBUGGING_F
+#ifdef _DEBUGGING
 		printf("\nFatOffset: 0x%x", fatOffset);
 		printf("\nThisFATSecNum: 0x%x", info.sectorNums[info.clusterNum]);
 		printf("\nThisFATEntOff: 0x%x", info.entryOffset[info.clusterNum]);
-		printf("\nThisFATSecNum Address: 0x%lx\n", byte_addr);
+		printf("\nThisFATSecNum Address: 0x%lx", byte_addr);
 		printf("\nFIRST SECTOR: 0x%x", info.firstSectors[info.clusterNum]);
 		printf("\nEOC value == 0x%lx", next_cluster);
+		printf("\nClusterNum: %d", info.clusterNum);
 #endif
 		info.clusterNum++;
 	}

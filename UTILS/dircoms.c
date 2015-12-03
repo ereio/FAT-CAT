@@ -33,6 +33,8 @@ int PrintDirectory(char args[][ACOLS]){
 		status = printdir(*fatcat.curDir);
 	}
 
+	PrintDirVerbose(*fatcat.curDir);
+	printf("\nDIR cluster addr: 0x%x\n", fatcat.curDir->cluster->firstSectors[0]);
 	return status;
 }
 
@@ -72,6 +74,7 @@ int printdir(struct directory current){
 	unsigned long byte_addr = 0;
 
 	for(int i=0; i < current.cluster->clusterNum; i++){
+		endofdir = 0;
 		byte_addr = current.cluster->firstSectors[i] * BPB_BytesPerSec;
 
 		while(!endofdir){
@@ -142,17 +145,21 @@ struct directory parsedir(unsigned long byte_addr, int print_values){
 	fread(&dir.FileSize, DIR_FileSize, 1, fatcat.img);
 
 	if(checkdirerr(dir)){
+		printf("\n CHECK DIR ERROR hit!\n");
 		dir.name[0] = 0x7C;
 		return dir;
 	}
 
 	if (print_values)
 		PrintDirStandard(dir);
-	else if(!(dir.Attr ^ ATTR_DIRECTORY) || !(dir.Attr ^ ATTR_ARCHIVE))
+	else if(!(dir.Attr ^ ATTR_DIRECTORY) || !(dir.Attr ^ ATTR_ARCHIVE)){
 		setclus(&dir);
+	}
+
 
 #ifdef  _DEBUGGING_F
 	// printf("\nByte Address Read: 0x%07lx", byte_addr);
+	// PrintDirVerbose()
 #endif
 	return dir;
 }
@@ -167,22 +174,36 @@ unsigned int setclus(struct directory * dir){
 		clusval = clusval << 1;
 		clusval = clusval | dir->FstClusLO;
 
+		temp = FindClusterInfo(clusval);
 #ifdef  _DEBUGGING_F
+		printf("\nSetting Cluster info\n");
 		printf("\nCLUSTER VALUE: %d\n", clusval);
 #endif
-		temp = FindClusterInfo(clusval);
 		memcpy(dir->cluster, &temp, sizeof(struct cluster));
 		return 0;
 }
 
 int checkdirerr(struct directory dir){
+
+	// Checks all invalid characters for first char of name
 	if(dir.name[0] < 0x20 && !(dir.name[0] == 0x00)) return -1;
+
+	// special cases for "." and ".."
+	if(dir.name[0] == '.' && dir.name[1] != ' ')
+		if(dir.name[1] != '.' && dir.name[2] != ' ')
+			return -3;
+
+	// makes sure "...", etc doesn't exist or is attempting to be used
+	for(int i=2; i < 11; i++)
+		if(dir.name[i] == 0x2E)
+				return -4;
+
+	// Always invalid characters
 	for(int i=0; i < 11; i++){
 		if( dir.name[i] == 0x22 ||
 			dir.name[i] == 0x2A ||
 			dir.name[i] == 0x2B ||
 			dir.name[i] == 0x2C ||
-			dir.name[i] == 0x2E ||
 			dir.name[i] == 0x2F ||
 			dir.name[i] == 0x3A ||
 			dir.name[i] == 0x3B ||
