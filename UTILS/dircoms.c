@@ -25,16 +25,24 @@
 
 int PrintDirectory(char args[][ACOLS]){
 	int status = 0;
+	char * name = malloc(sizeof(char) * strlen(args[1]));
+	struct directory temp;
 
 	if(args[1][0] != 0){
-		printf("Args[1] == %d\n", args[1][0]);
-		return 0;
+		strcpy(name, args[1]);
+		nametofat(name);
+		temp = finddir(*fatcat.curDir, ATTR_DIRECTORY, name);
+		status = printdir(temp);
+		return status;
 	} else {
 		status = printdir(*fatcat.curDir);
 	}
 
+#ifdef _DEBUGGING
 	PrintDirVerbose(*fatcat.curDir);
 	printf("\nDIR cluster addr: 0x%x\n", fatcat.curDir->cluster->firstSectors[0]);
+#endif
+	free(name);
 	return status;
 }
 
@@ -43,16 +51,13 @@ void ChangeDirectory(char args[][ACOLS]){
 	char * name = malloc(sizeof(char) * strlen(args[1]));
 	dest.name[0] = 0x00;	// Allows distinction if dir is set
 
-	strcpy(name, args[1]);
-	if(strlen(name) == 0){
+	if(strlen(args[1]) == 0){
 		printf("\nUsage: cd <directory_name>");
 		return;
 	}
 
-	for(int i=0; i < strlen(name); i++){
-		if(name[i] == '/') name[i] = '\0';
-		name[i] = toupper(name[i]);
-	}
+	strcpy(name, args[1]);
+	nametofat(name);
 
 	// add name parsing by slashes, right now depth is 1
 	dest = finddir(*fatcat.curDir, ATTR_DIRECTORY, name);
@@ -103,6 +108,8 @@ struct directory finddir(struct directory current, unsigned int attr, char * nam
 	struct directory dir;
 	char dirName[12];
 
+	printf("*****Searching for name: %s", name);
+
 	for(int i=0; i < current.cluster->clusterNum; i++){
 		byte_addr = current.cluster->firstSectors[i] * BPB_BytesPerSec;
 
@@ -147,7 +154,7 @@ struct directory parsedir(unsigned long byte_addr, int print_values){
 	if(checkdirerr(dir)){
 		printf("\n CHECK DIR ERROR hit: %d\n", checkdirerr(dir));
 		PrintDirVerbose(dir);
-		dir.name[0] = 0x7C;
+		dir.name[0] = DIR_ERROR;
 		return dir;
 	}
 
@@ -156,7 +163,6 @@ struct directory parsedir(unsigned long byte_addr, int print_values){
 	else if(!(dir.Attr ^ ATTR_DIRECTORY) || !(dir.Attr ^ ATTR_ARCHIVE)){
 		setclus(&dir);
 	}
-
 
 #ifdef  _DEBUGGING_F
 	// printf("\nByte Address Read: 0x%07lx", byte_addr);

@@ -6,8 +6,9 @@
  * */
 #include "../global.h"
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 #include "utils.h"
 #include "dircoms.h"
 
@@ -67,9 +68,10 @@ int LoadBPB(FILE * img) {
 }
 
 /*
- * Note also that the CountofClusters value is exactly that—the count of data clusters starting at cluster
-2. The maximum valid cluster number for the volume is CountofClusters + 1, and the “count of
-clusters including the two reserved clusters” is CountofClusters + 2.
+ * Note also that the CountofClusters value is exactly that—the count of data
+ * clusters starting at cluster
+ * 2. The maximum valid cluster number for the volume is CountofClusters + 1,
+ * and the “count of clusters including the two reserved clusters” is CountofClusters + 2.
 */
 int SetRootDir(FILE * img) {
 
@@ -111,13 +113,21 @@ unsigned int setclus(struct directory * dir){
 		clusval = clusval == 0x00 ? BPB_RootClus : clusval;
 
 		temp = FindClusterInfo(clusval);
-#ifdef  _DEBUGGING_F
-		printf("\nSetting Cluster info\n");
+#ifdef  _DEBUGGING
+		printf("\nSetting Cluster info");
 		printf("\nCLUSTER VALUE: %d\n", clusval);
 #endif
 		memcpy(dir->cluster, &temp, sizeof(struct cluster));
 		return 0;
 }
+
+void nametofat(char * name){
+	for(int i=0; i < strlen(name); i++){
+		if(name[i] == '/') name[i] = '\0';
+		name[i] = toupper(name[i]);
+	}
+}
+
 
 struct cluster FindClusterInfo(unsigned int cluster){
 	struct cluster info;
@@ -130,7 +140,6 @@ struct cluster FindClusterInfo(unsigned int cluster){
 	while(more){
 		fatOffset = cluster * 4;
 
-		printf("\n\nCLUSTER USED:%d", cluster);
 		// Finds first data sector for cluster / cluster chain node
 		info.firstSectors[info.clusterNum] = ((cluster - 2) * BPB_SecPerClus) + fatcat.firstDataSector;
 		info.sectorNums[info.clusterNum] = BPB_RsvdSecCnt + (fatOffset / BPB_BytesPerSec);	// sector of cluster chain info
@@ -147,7 +156,8 @@ struct cluster FindClusterInfo(unsigned int cluster){
 		more = next_cluster < EOC;
 		if(more) cluster = next_cluster;
 
-#ifdef _DEBUGGING_F
+#ifdef _DEBUGGING
+		printf("\n\nCLUSTER USED:%d", cluster);
 		printf("\nFatOffset: 0x%x", fatOffset);
 		printf("\nThisFATSecNum: 0x%x", info.sectorNums[info.clusterNum]);
 		printf("\nThisFATEntOff: 0x%x", info.entryOffset[info.clusterNum]);
@@ -162,7 +172,7 @@ struct cluster FindClusterInfo(unsigned int cluster){
 	return info;
 }
 
-int PrintBootSectInfo() {
+int PrintBootSectInfo(){
 
 	printf("\n\nBytes Per Sector: %d\n", BPB_BytesPerSec);
 
@@ -218,5 +228,4 @@ int PrintBootSectInfo() {
 	printf("\n");
 	return 0;
 }
-
 

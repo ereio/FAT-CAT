@@ -8,5 +8,6 @@ int SetRootDir();
 struct cluster FindClusterInfo(unsigned int cluster);
 
 unsigned int setclus(struct directory * dir);
+void nametofat(char * name);
 
 #endif

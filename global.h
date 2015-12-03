@@ -104,16 +104,15 @@ extern char* cuser;
 
 /* Globals  */
 extern struct directory * OPENFILES;
-
 extern struct address * ADDRS;
 extern struct fatcat fatcat;
+
 extern int margc;
 extern int run;
 extern int exec;
 extern int runbg;
 
 /* Boot Globals */
-
 extern unsigned int BPB_BytesPerSec;
 extern unsigned char BPB_SecPerClus;
 extern unsigned short BPB_RsvdSecCnt;
