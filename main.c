@@ -68,6 +68,7 @@ unsigned int BS_BootSig = 0;
 unsigned int BS_VolID = 0;
 unsigned char BS_VolLab[11] = {0};
 unsigned char BS_FilSysType[8] = {0};
+struct directory OPENFILES[2048] = {0};
 
 /* ALL EXITING TASKS DONE HERE */
 int exit_shell(){

@@ -6,8 +6,9 @@
  * */
 #include "../global.h"
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 #include "utils.h"
 #include "dircoms.h"
 
@@ -21,6 +22,10 @@ int LoadImage(FILE * img) {
 	status = SetRootDir(img);
 
 	if(status != 0 && status != 1) printf("\n\nLoadImage error: %d\n", status);
+
+#ifdef _DEBUGGING_BOOT_SECT
+	PrintBootSectInfo();
+#endif
 
 	return status;
 }
@@ -57,14 +62,116 @@ int LoadBPB(FILE * img) {
 	fread(&BS_VolLab, 1, 11, img);
 	fread(&BS_FilSysType, 1, 8, img);
 
-#ifdef _DEBUGGING_BOOT_SECT
-	PrintBootSectInfo();
-#endif
+
 
 	return 0;
 }
 
-int PrintBootSectInfo() {
+/*
+ * Note also that the CountofClusters value is exactly that—the count of data
+ * clusters starting at cluster
+ * 2. The maximum valid cluster number for the volume is CountofClusters + 1,
+ * and the “count of clusters including the two reserved clusters” is CountofClusters + 2.
+*/
+int SetRootDir(FILE * img) {
+
+	struct cluster temp;
+
+	fatcat.rootDirSectors = ((BPB_RootEntCnt * 32) + (BPB_BytesPerSec - 1)) / BPB_BytesPerSec;
+
+	fatcat.firstDataSector = BPB_RsvdSecCnt + (BPB_NumFATs * BPB_FATSz32) + fatcat.rootDirSectors;
+
+	fatcat.dataSectors = BPB_TotSec32 -(BPB_RsvdSecCnt + (BPB_NumFATs * BPB_FATSz32) + fatcat.rootDirSectors);
+
+	fatcat.dataClusters = fatcat.dataSectors / BPB_SecPerClus;
+
+	if(fatcat.dataClusters < 65526) return -1;
+
+	temp = FindClusterInfo(BPB_RootClus);
+
+	memcpy(fatcat.curDir->cluster, &temp, sizeof(struct cluster));
+
+	fatcat.dirName = "/";
+
+	printf("\n\nRoot Directory Address: %d", fatcat.rootDirSectors);
+	printf("\nFirst Data Sector: 0x%x", fatcat.firstDataSector);
+	printf("\nTotal Data Sectors: %d", fatcat.dataSectors);
+	printf("\nTotal Data Clusters: %d\n\n", fatcat.dataClusters);
+
+	return 1;
+}
+
+void nametofat(char * name){
+	for(int i=0; i < strlen(name); i++){
+		if(name[i] == '/') name[i] = '\0';
+		name[i] = toupper(name[i]);
+	}
+}
+
+unsigned int setclus(struct directory * dir){
+		struct cluster temp;
+		unsigned int clusval = 0;
+
+		dir->cluster = malloc(sizeof(struct cluster));
+
+		clusval = dir->FstClusHi;
+		clusval = clusval << 1;
+		clusval = clusval | dir->FstClusLO;
+		clusval = clusval == 0x00 ? BPB_RootClus : clusval;
+
+		temp = FindClusterInfo(clusval);
+#ifdef  _DEBUGGING
+		printf("\nSetting Cluster info");
+		printf("\nCLUSTER VALUE: %d\n", clusval);
+#endif
+		memcpy(dir->cluster, &temp, sizeof(struct cluster));
+		return 0;
+}
+
+struct cluster FindClusterInfo(unsigned int cluster){
+	struct cluster info;
+	unsigned int fatOffset = 0;
+	unsigned long next_cluster = 0;
+	unsigned long byte_addr;
+	int more = 1; 				// Indicates there are more clusters in chain
+	info.clusterNum = 0;
+
+	while(more){
+		fatOffset = cluster * 4;
+
+		// Finds first data sector for cluster / cluster chain node
+		info.firstSectors[info.clusterNum] = ((cluster - 2) * BPB_SecPerClus) + fatcat.firstDataSector;
+		info.sectorNums[info.clusterNum] = BPB_RsvdSecCnt + (fatOffset / BPB_BytesPerSec);	// sector of cluster chain info
+		info.entryOffset[info.clusterNum] = fatOffset % BPB_BytesPerSec;					// offset of cluster chain info
+
+		// address found using the sector and offset
+		byte_addr = (info.sectorNums[info.clusterNum] * BPB_BytesPerSec) + info.entryOffset[info.clusterNum];
+
+		// goes to address to see if another cluster contains information in a cluster chain
+		fseek(fatcat.img, byte_addr, SEEK_SET);
+		fread(&next_cluster, 4, 1, fatcat.img);
+
+		// check to see if the End of Cluster Chain value was found
+		more = next_cluster < EOC;
+		if(more) cluster = next_cluster;
+
+#ifdef _DEBUGGING
+		printf("\n\nCLUSTER USED:%d", cluster);
+		printf("\nFatOffset: 0x%x", fatOffset);
+		printf("\nThisFATSecNum: 0x%x", info.sectorNums[info.clusterNum]);
+		printf("\nThisFATEntOff: 0x%x", info.entryOffset[info.clusterNum]);
+		printf("\nThisFATSecNum Address: 0x%lx", byte_addr);
+		printf("\nFIRST SECTOR: 0x%x", info.firstSectors[info.clusterNum]);
+		printf("\nEOC value == 0x%lx", next_cluster);
+		printf("\nClusterNum: %d", info.clusterNum);
+#endif
+		info.clusterNum++;
+	}
+
+	return info;
+}
+
+int PrintBootSectInfo(){
 
 	printf("\n\nBytes Per Sector: %d\n", BPB_BytesPerSec);
 
@@ -121,97 +228,3 @@ int PrintBootSectInfo() {
 	return 0;
 }
 
-/*
- * Note also that the CountofClusters value is exactly that—the count of data clusters starting at cluster
-2. The maximum valid cluster number for the volume is CountofClusters + 1, and the “count of
-clusters including the two reserved clusters” is CountofClusters + 2.
-*/
-int SetRootDir(FILE * img) {
-
-	struct cluster temp;
-
-	fatcat.rootDirSectors = ((BPB_RootEntCnt * 32) + (BPB_BytesPerSec - 1)) / BPB_BytesPerSec;
-
-	fatcat.firstDataSector = BPB_RsvdSecCnt + (BPB_NumFATs * BPB_FATSz32) + fatcat.rootDirSectors;
-
-	fatcat.dataSectors = BPB_TotSec32 -(BPB_RsvdSecCnt + (BPB_NumFATs * BPB_FATSz32) + fatcat.rootDirSectors);
-
-	fatcat.dataClusters = fatcat.dataSectors / BPB_SecPerClus;
-
-	if(fatcat.dataClusters < 65526) return -1;
-
-	temp = FindClusterInfo(BPB_RootClus);
-
-	memcpy(fatcat.curDir->cluster, &temp, sizeof(struct cluster));
-
-	fatcat.dirName = "/";
-
-	printf("\n\nRoot Directory Address: %d", fatcat.rootDirSectors);
-	printf("\nFirst Data Sector: 0x%x", fatcat.firstDataSector);
-	printf("\nTotal Data Sectors: %d", fatcat.dataSectors);
-	printf("\nTotal Data Clusters: %d\n\n", fatcat.dataClusters);
-
-	return 1;
-}
-
-
-unsigned int FindFirstSector(unsigned int cluster){
-	unsigned int firstSector = 0;
-
-	firstSector = ((cluster - 2) * BPB_SecPerClus) + fatcat.firstDataSector;
-
-	return firstSector;
-}
-
-struct cluster FindClusterInfo(unsigned int cluster){
-	struct cluster info;
-	unsigned int fatOffset = 0;
-	unsigned long next_cluster = 0;
-	unsigned long byte_addr;
-	int more = 1; 				// Indicates there are more clusters in chain
-	info.clusterNum = 0;
-
-	while(more){
-		fatOffset = cluster * 4;
-		// Finds first data sector for cluster / cluster chain node
-		info.firstSectors[info.clusterNum] = FindFirstSector(cluster);
-		info.sectorNums[info.clusterNum] = BPB_RsvdSecCnt + (fatOffset / BPB_BytesPerSec);	// sector of cluster chain info
-		info.entryOffset[info.clusterNum] = fatOffset % BPB_BytesPerSec;					// offset of cluster chain info
-
-		// address found using the sector and offset
-		byte_addr = (info.sectorNums[info.clusterNum] * BPB_BytesPerSec) + info.entryOffset[info.clusterNum];
-
-		// goes to address to see if another cluster contains information in a cluster chain
-		fseek(fatcat.img, byte_addr, SEEK_SET);
-		fread(&next_cluster, 4, 1, fatcat.img);
-
-		// check to see if the End of Cluster Chain value was found
-		more = next_cluster < EOC;
-		if(more) cluster = next_cluster;
-
-#ifdef _DEBUGGING
-		printf("\nFatOffset: 0x%x", fatOffset);
-		printf("\nThisFATSecNum: 0x%x", info.sectorNums[info.clusterNum]);
-		printf("\nThisFATEntOff: 0x%x", info.entryOffset[info.clusterNum]);
-		printf("\nThisFATSecNum Address: 0x%lx", byte_addr);
-		printf("\nFIRST SECTOR: 0x%x", info.firstSectors[info.clusterNum]);
-		printf("\nEOC value == 0x%lx", next_cluster);
-		printf("\nClusterNum: %d", info.clusterNum);
-#endif
-		info.clusterNum++;
-	}
-
-	return info;
-}
-
-void GetClusterData(unsigned int cluster){
-/*	unsigned long DWORD = 0;
-	char* data = 0;
-	struct cluster info = FindClusterInfo(cluster);*/
-
-}
-
-void SetClusterData(unsigned int cluster){
-
-
-}
