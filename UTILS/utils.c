@@ -101,6 +101,13 @@ int SetRootDir(FILE * img) {
 	return 1;
 }
 
+void nametofat(char * name){
+	for(int i=0; i < strlen(name); i++){
+		if(name[i] == '/') name[i] = '\0';
+		name[i] = toupper(name[i]);
+	}
+}
+
 unsigned int setclus(struct directory * dir){
 		struct cluster temp;
 		unsigned int clusval = 0;
@@ -120,14 +127,6 @@ unsigned int setclus(struct directory * dir){
 		memcpy(dir->cluster, &temp, sizeof(struct cluster));
 		return 0;
 }
-
-void nametofat(char * name){
-	for(int i=0; i < strlen(name); i++){
-		if(name[i] == '/') name[i] = '\0';
-		name[i] = toupper(name[i]);
-	}
-}
-
 
 struct cluster FindClusterInfo(unsigned int cluster){
 	struct cluster info;

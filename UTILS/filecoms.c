@@ -12,7 +12,7 @@ int openFile(char args[][ACOLS]) {
 	// If exists && is file, add to open file table (OPENFILES, extern)
 	// Else if directory, print error
 	// Else print error
-	char * fileName = args[1][0];
+	char * fileName = args[1];
 	// *** WARNING ***
 	// Directory organization needs to be discussed before proceeding
 	unsigned long byte_addr = fatcat.curDir->cluster->firstSectors[0] * BPB_BytesPerSec;
@@ -25,7 +25,8 @@ int openFile(char args[][ACOLS]) {
 
         while(!endofdir){
                 linecount %= 8;
-                curdir = parsedir(byte_addr, 0);
+                curdir = parsedir(byte_addr);
+                PrintDirStandard(curdir);
                 if(checkdirerr(curdir)) return -1;
                 free = curdir.name[0];
 

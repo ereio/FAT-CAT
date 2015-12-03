@@ -34,6 +34,7 @@
 #define RW 2
 #define DIR_ERROR 0x7C
 #define DIR_EMPTY 0x00
+#define DIR_INVALIDS 0x20
 
 /* Structures  */
 struct address{

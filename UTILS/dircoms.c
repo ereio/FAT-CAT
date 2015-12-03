@@ -76,23 +76,26 @@ int printdir(struct directory current){
 	int endofdir = 0;
 	int linecount = 1;
 	struct directory curdir;
-	unsigned long byte_addr = 0;
+	unsigned long cur_addr = 0;
+	unsigned long end_addr = 0;
 
 	for(int i=0; i < current.cluster->clusterNum; i++){
 		endofdir = 0;
-		byte_addr = current.cluster->firstSectors[i] * BPB_BytesPerSec;
+		cur_addr = current.cluster->firstSectors[i] * BPB_BytesPerSec * BPB_SecPerClus;
+		end_addr = cur_addr + (BPB_BytesPerSec * BPB_SecPerClus);
 
 		while(!endofdir){
 			linecount %= 8;
-			curdir = parsedir(byte_addr, 1);
+			curdir = parsedir(cur_addr);
 			if(curdir.name[0] == DIR_ERROR){
 				printf("\nAn invalid directory was encountered");
 				return -1;
 			}
+			PrintDirStandard(curdir);
 			if(linecount % 8 == 0) printf("\n");
-			byte_addr += 32;
+			cur_addr += DIR_SIZE;
 			linecount++;
-			endofdir = curdir.name[0] == 0x00 ? 1 : 0;
+			endofdir = (curdir.name[0] == 0x00 ? 1 : 0) || (cur_addr == end_addr);
 		}
 	}
 
@@ -104,17 +107,18 @@ int printdir(struct directory current){
 // 0x00000000. <dir_var>.name[0] == 0x00 can determine if not found
 struct directory finddir(struct directory current, unsigned int attr, char * name){
 	int endofdir = 0;
-	unsigned long byte_addr = 0;
+	unsigned long cur_addr = 0;
+	unsigned long end_addr = 0;
 	struct directory dir;
 	char dirName[12];
 
-	printf("*****Searching for name: %s", name);
-
 	for(int i=0; i < current.cluster->clusterNum; i++){
-		byte_addr = current.cluster->firstSectors[i] * BPB_BytesPerSec;
+		endofdir = 0;
+		cur_addr = current.cluster->firstSectors[i] * BPB_BytesPerSec * BPB_SecPerClus;
+		end_addr = cur_addr + (BPB_BytesPerSec * BPB_SecPerClus);
 
 		while(!endofdir){
-			dir = parsedir(byte_addr, 0);
+			dir = parsedir(cur_addr);
 			if(dir.name[0] == DIR_ERROR) printf("\nAn invalid directory was encountered");
 
 			if(dir.Attr & attr){
@@ -123,16 +127,15 @@ struct directory finddir(struct directory current, unsigned int attr, char * nam
 					return dir;
 				}
 			}
-			byte_addr += DIR_SIZE;
-			endofdir = dir.name[0] == 0x00 ? 1 : 0;
+			cur_addr += DIR_SIZE;
+			endofdir = (dir.name[0] == 0x00 ? 1 : 0) || (cur_addr == end_addr);
 			if(dir.cluster != NULL) free(dir.cluster);
 		}
 	}
-
 	return dir;
 }
 
-struct directory parsedir(unsigned long byte_addr, int print_values){
+struct directory parsedir(unsigned long byte_addr){
 	struct directory dir;
 	dir.cluster = NULL;
 
@@ -158,9 +161,7 @@ struct directory parsedir(unsigned long byte_addr, int print_values){
 		return dir;
 	}
 
-	if (print_values)
-		PrintDirStandard(dir);
-	else if(!(dir.Attr ^ ATTR_DIRECTORY) || !(dir.Attr ^ ATTR_ARCHIVE)){
+	if(!(dir.Attr ^ ATTR_DIRECTORY) || !(dir.Attr ^ ATTR_ARCHIVE)){
 		setclus(&dir);
 	}
 
@@ -171,42 +172,50 @@ struct directory parsedir(unsigned long byte_addr, int print_values){
 	return dir;
 }
 
+struct directory makedir(){
+	struct directory temp;
+
+	return temp;
+}
+
 int checkdirerr(struct directory dir){
-
 	// Checks all invalid characters for first char of name
-	if(dir.name[0] < 0x20 && !(dir.name[0] == 0x00)) return -1;
+	if(!(dir.Attr ^ ATTR_DIRECTORY)){
+		if(dir.name[0] < DIR_INVALIDS && !(dir.name[0] == DIR_EMPTY))
+					return -1;
 
-	// special cases for "." and ".."
-	if(dir.name[0] == '.' && dir.name[1] != ' ')
-		if(dir.name[1] != '.' && dir.name[2] != ' ')
-			return -3;
+		// special cases for "." and ".."
+		if(dir.name[0] == '.' && dir.name[1] != ' ')
+			if(dir.name[1] != '.' && dir.name[2] != ' ')
+				return -3;
 
-	// makes sure "...", etc doesn't exist or is attempting to be used
-	for(int i=2; i < 11; i++)
-		if(dir.name[i] == 0x2E)
-				return -4;
-
-	// Always invalid characters
-	for(int i=0; i < 11; i++){
-		if( dir.name[i] == 0x22 ||
-			dir.name[i] == 0x2A ||
-			dir.name[i] == 0x2B ||
-			dir.name[i] == 0x2C ||
-			dir.name[i] == 0x2F ||
-			dir.name[i] == 0x3A ||
-			dir.name[i] == 0x3B ||
-			dir.name[i] == 0x3C ||
-			dir.name[i] == 0x3D ||
-			dir.name[i] == 0x3E ||
-			dir.name[i] == 0x3F ||
-			dir.name[i] == 0x5B ||
-			dir.name[i] == 0x5C ||
-			dir.name[i] == 0x5D ||
-			dir.name[i] == 0x7C ){
-			printf("\nInvalid Char: %x", dir.name[i]);
-			return -2;
+		// Always invalid characters
+		for(int i=0; i < 11; i++){
+			if( dir.name[i] == 0x22 ||
+				dir.name[i] == 0x2A ||
+				dir.name[i] == 0x2B ||
+				dir.name[i] == 0x2C ||
+				dir.name[i] == 0x2F ||
+				dir.name[i] == 0x3A ||
+				dir.name[i] == 0x3B ||
+				dir.name[i] == 0x3C ||
+				dir.name[i] == 0x3D ||
+				dir.name[i] == 0x3E ||
+				dir.name[i] == 0x3F ||
+				dir.name[i] == 0x5B ||
+				dir.name[i] == 0x5C ||
+				dir.name[i] == 0x5D ||
+				dir.name[i] == 0x7C ){
+				printf("\nInvalid Char: %x", dir.name[i]);
+				return -2;
+			}
 		}
+		// makes sure "...", etc doesn't exist or is attempting to be used
+		for(int i=2; i < 11; i++)
+			if(dir.name[i] == 0x2E)
+					return -4;
 	}
+
 	return 0;
 }
 
