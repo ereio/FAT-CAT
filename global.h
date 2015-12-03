@@ -5,7 +5,7 @@
 #endif
 
 #ifndef _DEBUGGING_BOOT_SECT
-#define _DEBUGGING_BOOT_SECT	// Comment out for less output
+//#define _DEBUGGING_BOOT_SECT	// Comment out for less output
 #endif
 
 //#ifndef _DEBUGGING
@@ -13,7 +13,7 @@
 //#endif
 
 #ifndef _DEBUGGING_F
-#define _DEBUGGING_F	// Comment out for less output
+//#define _DEBUGGING_F	// Comment out for less output
 #endif
 
 #include <sys/types.h>
@@ -106,7 +106,9 @@ extern const int ACOLS;
 extern char* cuser;
 
 /* Globals  */
-extern struct directory * OPENFILES;
+extern struct directory OPENFILES[2048];
+extern int num_open_files;
+
 extern struct address * ADDRS;
 extern struct fatcat fatcat;
 

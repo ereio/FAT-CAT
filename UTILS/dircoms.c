@@ -156,10 +156,12 @@ struct directory finddir(struct directory current, unsigned int attr, char * nam
 			if(dir.name[0] == DIR_ERROR) printf("\nAn invalid directory was encountered");
 
 			// SIMPLIFY THIS
+			// OR NOT
 			if(!(attr ^ ATTR_ALL)){
 				convertdirname(dir, dirName);
-				if(!strcmp(dirName, name))
+				if(!strcmp(dirName, name)) {
 					return dir;
+				}
 			} else if(!(dir.Attr ^ attr)){
 				convertdirname(dir, dirName);
 				if(!strcmp(dirName, name))
@@ -259,10 +261,12 @@ int checkdirerr(struct directory dir){
 
 // Needed for comparisons in cd
 void convertdirname(struct directory dir, char * name){
-	char * str = dir.name;
+	char str[11];
 	char temp[12] = {"\0"};
 	int namepos = 0;
 	char ext[3] = {"\0"};
+
+	strcpy(str, dir.name);
 
 	if (dir.Attr & ATTR_LONG_NAME) return;
 	if (dir.name[0] == 0xE5) return;

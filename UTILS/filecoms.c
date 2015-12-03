@@ -7,56 +7,41 @@
 #include "UTILS/filecoms.h"
 #include "UTILS/utils.h"
 
+int num_open_files = 0;
+
 int openFile(char args[][ACOLS]) {
-	// Parse through entries in directory
-	// If exists && is file, add to open file table (OPENFILES, extern)
-	// Else if directory, print error
-	// Else print error
-	char * fileName = args[1];
-	// *** WARNING ***
-	// Directory organization needs to be discussed before proceeding
-	unsigned long byte_addr = fatcat.curDir->cluster->firstSectors[0] * BPB_BytesPerSec;
-	unsigned char free = 0x01;
-	int endofdir = 0;
-	int linecount = 1;
-	int i = 0;
-	int found_match = 0;
-        struct directory curdir;
+	char * fileName = malloc(sizeof(char) * strlen(args[1]));
+	strcpy(fileName, args[1]);
+	struct directory found_dir;
+	found_dir = finddir(*fatcat.curDir, ATTR_ALL, fileName);
 
-        while(!endofdir){
-                linecount %= 8;
-                curdir = parsedir(byte_addr);
-                PrintDirStandard(curdir);
-                if(checkdirerr(curdir)) return -1;
-                free = curdir.name[0];
+	if (found_dir.name[0] == 0x00 || (found_dir.Attr & ATTR_LONG_NAME)) {
+		printf("%s does not exist in this directory\n", fileName);
+		return 0;
+	}
 
-                if(free == 0xE5 || free == 0x00){
-                        endofdir = 1;
-                } else if (strstr(curdir.name, fileName) != NULL) {
-			if (curdir.Attr & ATTR_DIRECTORY) {
-				printf("Error: '%s' is a directory\n", fileName);
-			}
-			else {
-				found_match = 1;
-			}
-			break;
-		} else {
-                        if(linecount % 8 == 0) printf("\n");
-                        byte_addr += 32;
-                        linecount++;
-                }
-        }
+	if (!(found_dir.Attr & ATTR_DIRECTORY)) {
+		char * mode = malloc(sizeof(char) * strlen(args[2]));
+		strcpy(mode, args[2]);
 
-	if (found_match) {
-		for (i = 0; i < 1000; i++) {
-			if (OPENFILES[i].name[0] == '\0') {
-				OPENFILES[i] = curdir;
-				break;
-			}
+		printf("mode: %s\n", mode);
+
+		if (!strcmp(mode, "r"))
+			found_dir.Mode = R;
+		else if (!strcmp(mode, "rw") || !strcmp(mode, "wr"))
+			found_dir.Mode = RW;
+		else if (!strcmp(mode, "w"))
+			found_dir.Mode = W;
+		else {
+			printf("Incorrect mode or missing argument\n");
+			return 0;
 		}
+
+		OPENFILES[num_open_files] = found_dir;
+		num_open_files++;
 	}
 	else {
-		printf("Error: no file '%s' found\n", fileName);
+		printf("%s is a directory\n", fileName);
 	}
 
 	return 0;
