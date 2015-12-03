@@ -16,7 +16,7 @@
 
 
 /* Commands */
-const char* OPEN  = "exit";
+const char* OPEN  = "open";
 const char* CLOSE  = "close";
 const char* CREATE  = "create";
 const char* SIZE = "size";

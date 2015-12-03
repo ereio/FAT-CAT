@@ -23,7 +23,6 @@
  * in 32 anyway
  * */
 struct address* ADDRS = NULL;
-struct directory* OPENFILES = NULL;
 
 						/* Internal Management */
 /***************************************************************************/
@@ -84,14 +83,6 @@ int init_memmy(){
 	for(i = 0; i < MAX_HEAP_SIZE; i++){
 		ADDRS[i].loc = NULL;
 		_clear(&ADDRS[i]);
-	}
-
-	if (OPENFILES != NULL) return 0;
-
-	OPENFILES = (struct directory *) malloc(sizeof(struct directory) * 1000);
-
-	for (i = 0; i < 1000; i++) {
-		OPENFILES[i].name[0] = '\0';
 	}
 
 	fatcat.curDir = malloc(sizeof(struct directory));

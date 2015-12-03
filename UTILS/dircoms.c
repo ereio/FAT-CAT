@@ -125,6 +125,33 @@ struct directory finddir(struct directory current, unsigned int attr, char * nam
 	return dir;
 }
 
+struct directory finddir_noattr(struct directory current, char * name){
+	int endofdir = 0;
+	unsigned long byte_addr = 0;
+	struct directory dir;
+	char dirName[12];
+
+	for(int i=0; i < current.cluster->clusterNum; i++){
+		byte_addr = current.cluster->firstSectors[i] * BPB_BytesPerSec;
+
+		while(!endofdir){
+			dir = parsedir(byte_addr, 0);
+			if(dir.name[0] == DIR_ERROR) printf("\nAn invalid directory was encountered");
+
+			convertdirname(dir, dirName);
+			if(!strcmp(dirName, name)){
+				return dir;
+			}
+
+			byte_addr += DIR_SIZE;
+			endofdir = dir.name[0] == 0x00 ? 1 : 0;
+			if(dir.cluster != NULL) free(dir.cluster);
+		}
+	}
+
+	return dir;
+}
+
 struct directory parsedir(unsigned long byte_addr, int print_values){
 	struct directory dir;
 	dir.cluster = NULL;
