@@ -145,7 +145,8 @@ struct directory parsedir(unsigned long byte_addr, int print_values){
 	fread(&dir.FileSize, DIR_FileSize, 1, fatcat.img);
 
 	if(checkdirerr(dir)){
-		printf("\n CHECK DIR ERROR hit!\n");
+		printf("\n CHECK DIR ERROR hit: %d\n", checkdirerr(dir));
+		PrintDirVerbose(dir);
 		dir.name[0] = 0x7C;
 		return dir;
 	}
@@ -162,25 +163,6 @@ struct directory parsedir(unsigned long byte_addr, int print_values){
 	// PrintDirVerbose()
 #endif
 	return dir;
-}
-
-unsigned int setclus(struct directory * dir){
-		struct cluster temp;
-		unsigned int clusval = 0;
-
-		dir->cluster = malloc(sizeof(struct cluster));
-
-		clusval = dir->FstClusHi;
-		clusval = clusval << 1;
-		clusval = clusval | dir->FstClusLO;
-
-		temp = FindClusterInfo(clusval);
-#ifdef  _DEBUGGING_F
-		printf("\nSetting Cluster info\n");
-		printf("\nCLUSTER VALUE: %d\n", clusval);
-#endif
-		memcpy(dir->cluster, &temp, sizeof(struct cluster));
-		return 0;
 }
 
 int checkdirerr(struct directory dir){
@@ -232,11 +214,11 @@ void convertdirname(struct directory dir, char * name){
 	if (dir.Attr & ATTR_LONG_NAME) return;
 	if (dir.name[0] == 0xE5) return;
 
+	for(int i=0; i < EXT && !isspace(str[i]); i++)
+				temp[i] = str[i];
+
 	for(int i=EXT; i < NAMELEN && !isspace(str[i]); i++)
 			ext[i-EXT] = str[i];
-
-	for(int i=0; i < EXT && !isspace(str[i]); i++)
-			temp[i] = str[i];
 
 	if (dir.Attr & ATTR_DIRECTORY) {
 		if(ext[0] != '\0') strcat(temp, ext);
