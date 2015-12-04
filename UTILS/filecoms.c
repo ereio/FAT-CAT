@@ -198,14 +198,22 @@ void readFile(char args[][ACOLS]) {
 
 	if (!(found_dir.Attr & ATTR_DIRECTORY)) {
 		check_mode = checkFile(found_dir);
-		if (check_mode != -1) {
-			if (check_mode == R || check_mode == RW) {
-
-			}
-			else {
-				printf("File %s is not open in read mode\n", fileName);
+		if (check_mode == R || check_mode == RW) {
+			if (pos < 0 || pos > found_dir.FileSize) {
+				printf("Invalid position\n");
 				return;
 			}
+			if (pos + numBytes > found_dir.FileSize || numBytes < 0) {
+				printf("Reached EoF\n");
+				return;
+			}
+
+			parsedata(found_dir, pos, numBytes);
+			printf("\n");
+		}
+		else {
+			printf("File %s is not open in read mode\n", fileName);
+			return;
 		}
 	}
 	else {
