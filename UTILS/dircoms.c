@@ -228,10 +228,10 @@ int parsedata(struct directory dir, unsigned int spos, unsigned int epos){
 		cur_addr = dir.cluster->firstSectors[i] * BPB_BytesPerSec * BPB_SecPerClus;
 		end_addr = cur_addr + (BPB_BytesPerSec * BPB_SecPerClus);
 
-		fseek(fatcat.img, cur_addr + spos, SEEK_SET);
+		fseek(fatcat.img, cur_addr, SEEK_SET);
 
 		for(int j=spos; j < epos; j++){
-			fread(&next, 2, 1, fatcat.img);
+			fread(&next, 1, 1, fatcat.img);
 			printf("%c",next);
 		}
 	}
