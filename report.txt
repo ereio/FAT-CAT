@@ -1,0 +1,176 @@
+======================================
+Problem Statement
+======================================
+For this project, you will design and implement a simple, user-space, shell-like utility that is capable of
+interpreting a FAT32 file system image. The program must understand the basic commands to manipulate
+the given file system image. The utility must not corrupt the file system image and should be robust. You
+may not reuse kernel file system code, and you may not copy code from other file system utilities (or from
+anywhere else over the internet, to be precise).
+
+======================================
+Steps Taken to Solve Problem
+======================================
+- Installed Linux Mint on a virtual machine
+- Mounted the fat32.img
+- Used pre-existing REPL code from project 1 to simplify parsing and memory
+- Used Hexedit to verify file contents directly
+- Read FAT32 Spec from Microsoft; learnt how sectors/clusters and their addresses coincide
+
+======================================
+Additional Assumptions
+======================================
+- no more than 2048 open files at one time
+- position is never negative
+- num_bytes is never negative
+- lowercase assumed to be uppercase
+- each command is always provided with a valid number of arguments
+
+======================================
+Problems
+======================================
+- mkdir half implemented
+- rmdir implemented to the extent rm is implemented; originally thought needed recursive delete
+- create and write not implemented
+- prompt does not accurately reflect current directory (however, cd does fully work otherwise)
+
+======================================
+Known Bugs
+======================================
+- rm fails to remove larger files
+- rm fails to remove directory entry (but does remove data)
+- running rm will remove data from its location, but then files remain when calling "ls"
+- read could potentially have issues with reading across clusters; uncertain
+
+======================================
+Program Breakdown
+======================================
+- Loads BPB values
+- Sets root directory information
+- Loads FS information
+- Opens up to user input
+- When finding directory values, clusters chains are saved in a cluster struct and binded to a directory
+- Cluster chain is fully navigated and saved when setting a directory
+	- This makes it easier to navigate clusters and other functions without rediscovering cluster chain and byte addresses
+
+Fully Implemented:
+- LS
+	- can call "ls" to read current directory, or "ls <dir_name>" to read a subdirectory
+	- correctly error handles when trying to ls a file
+- CD
+	- navigates cluster chain to change the current directory to a subdirectory
+- READ
+	- reads an open file from a position, reading a certain amount of bytes
+	- navigates clusters to read beyond 512 bytes
+- OPEN
+	- adds directory entry object to a dynamic array, along with its mode of opening
+- CLOSE
+	- removes directory entry object from dynamic array
+- SIZE
+	- prints the DIR_FileSize attribute of a directory entry
+
+Partially Implemented:
+- RM
+	- removes data associated with a file, appropriately following it backwards through cluster chain
+	- does NOT remove directory entry; file still remains for "ls"
+	- theoretical code exists to remove this entry, using the same methods as printing for "ls"
+	- bizarro glitches prevented us from getting this code to work; perhaps demons
+	- only writes through on Zach's Linux Mint VM; doesn't work on Taylor's Ubuntu machine -- Ricardo baffled
+- RMDIR
+	- implementation would be similar to "ls"; follows through the cluster chain, finds the directory name, then removes it backwards
+		- check for existence in current directory
+		- check size (ensure empty)
+		- remove by working backwards through cluster chain
+	- ran out of time to fully implement
+- MKDIR
+	- code exists for mkdir, but we ran out of time to properly fine tune and test it
+		- initializes directory structure using struct tm in local time function
+		- bitshifts month/day/year into WRT Date, seconds/minutes/hours into WRT Time
+		- checks for first free cluster using FS Info
+		- checks to see if current cluster "High" and "Lo" values are set to zero (indicates root)
+		- if not root, creates . and .. entry using new directory structure, as well as current directory
+		- writes directory object to FAT32 image file using fwrite
+		- fflush and rewind to commit changes
+	- does not exist in REPL, cannot run the "mkdir" command
+
+Not Implemented:
+- CREATE
+- WRITE
+
+======================================
+Division of Labor
+======================================
+Zachary Diemer ************
+- open
+- close
+- size
+- ls
+- read
+
+Taylor Ereio ****************
+- setup
+- open
+- parsing
+- rm
+- rmdir (some work)
+- cd
+- ls
+- mkdir
+- read
+
+Ricardo Noriega ****************
+- open
+- parsing
+- size
+- report
+- readme
+- catering
+
+======================================
+Slack Days Used
+======================================
+0 days from Zachary Diemer
+0 days from Taylor Ereio
+0 days from Ricardo Noriega
+
+======================================
+Log
+======================================
+12/3/2015
+- fixed numerous bugs
+- parsing FSInfo
+- finished up what we could
+
+12/1/2015
+- refactored code a bit
+- improved 'cd'
+- returning to root finished
+- 'ls' fully implemented
+- 'mkdir' partially implemented
+
+11/26/2015
+- composed dir with clusters
+
+11/24/2015
+- partially implemented 'open'
+- 'ls' improved
+- partially implemented 'cd'
+
+11/19/2015
+- worked on reaching root
+- added parsing of dir based on sector
+  byte address
+- ls partially implemented
+
+11/16/2015
+- added more boot sector parsing
+
+11/11/2015
+- general setup of the project
+- parsing of first boot sector
+
+======================================
+Resources
+======================================
+http://stackoverflow.com/questions/23843587/fwrite-doesnt-work-directly-after-fread
+Slides and other resources provided in lectures.
+Many references located directly in code files in header.

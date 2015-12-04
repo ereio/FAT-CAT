@@ -5,7 +5,7 @@
 #endif
 
 #ifndef _DEBUGGING_BOOT_SECT
-#define _DEBUGGING_BOOT_SECT	// Comment out for less output
+//#define _DEBUGGING_BOOT_SECT	// Comment out for less output
 #endif
 
 //#ifndef _DEBUGGING

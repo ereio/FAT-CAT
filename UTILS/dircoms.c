@@ -267,7 +267,8 @@ int cleardir(struct directory current, char * name){
 		}
 	}
 
-
+	rewind(fatcat.img);
+	fflush(fatcat.img);
 
 	return 0;
 }

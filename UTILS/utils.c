@@ -228,12 +228,10 @@ int freecluschain(struct directory current){
 	unsigned long cur_addr = 0;
 	int status = -5;
 
-	for(int i=current.cluster->clusterNum; i >= 0; i--){
+	for(int i=current.cluster->clusterNum - 1; i >= 0; i--){
 		cur_addr = current.cluster->firstSectors[i] * BPB_BytesPerSec * BPB_SecPerClus;
-		printf("CUR ADD: 0x%lx\n", cur_addr);
 		fseek(fatcat.img, cur_addr, SEEK_SET);
-		status = fwrite(&freeval, 4, 2, fatcat.img);
-		printf("Status: %d\n", status);
+		status = fwrite(&freeval, 4, 1, fatcat.img);
 	}
 
 	rewind(fatcat.img);
@@ -241,51 +239,6 @@ int freecluschain(struct directory current){
 
 	return 0;
 }
-
-//struct cluster freecluschain(struct directory dir){
-//	struct cluster info;
-//	unsigned int fatOffset = 0;
-//	unsigned int clusval = 0;
-//	unsigned long next_cluster = 0;
-//	unsigned long byte_addr;
-//	int searching = 1; 				// Indicates there are more clusters in chain
-//	info.clusterNum = 0;
-//
-//	clusval = dir.FstClusHi;
-//	clusval = clusval << 1;
-//	clusval = clusval | dir.FstClusLO;
-//
-//	for(int i=0; i < dir.cluster->clusterNum; i++){
-//		while(searching){
-//			fatOffset = clusval * 4;
-//
-//			// Finds first data sector for cluster / cluster chain node
-//			info.firstSectors[info.clusterNum] = ((clusval - 2) * BPB_SecPerClus) + fatcat.firstDataSector;
-//			info.sectorNums[info.clusterNum] = BPB_RsvdSecCnt + (fatOffset / BPB_BytesPerSec);	// sector of cluster chain info
-//			info.entryOffset[info.clusterNum] = fatOffset % BPB_BytesPerSec;					// offset of cluster chain info
-//
-//			// address found using the sector and offset
-//			byte_addr = (info.firstSectors[info.clusterNum] * BPB_BytesPerSec);
-//
-//			printf("Byte Addr for free Cluster 0x%lx", byte_addr);
-//
-//			// goes to address to see if another cluster contains information in a cluster chain
-//			fseek(fatcat.img, byte_addr, SEEK_SET);
-//			fread(&next_cluster, 4, 1, fatcat.img);
-//
-//			// check to see if the End of Cluster Chain value was found
-//			searching = next_cluster < EOC && next_cluster != 0x00;
-//			if(searching) {
-//				clusval = next_cluster;
-//			} else {
-//				// Delete last cluster
-//				fseek(fatcat.img, byte_addr, SEEK_SET);
-//
-//			}
-//		}
-//	}
-//	return info;
-//}
 
 int PrintBootSectInfo(){
 
