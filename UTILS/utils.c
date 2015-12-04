@@ -235,7 +235,11 @@ int freecluschain(struct directory current){
 		status = fwrite(&freeval, 4, 2, fatcat.img);
 		printf("Status: %d\n", status);
 	}
-		return 0;
+
+	rewind(fatcat.img);
+	fflush(fatcat.img);
+
+	return 0;
 }
 
 //struct cluster freecluschain(struct directory dir){
