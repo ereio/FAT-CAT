@@ -226,12 +226,11 @@ struct cluster getfreeclus(FILE * img){
 int freecluschain(struct directory current){
 	unsigned int freeval = 0;
 	unsigned long cur_addr = 0;
-	int status = -5;
 
 	for(int i=current.cluster->clusterNum - 1; i >= 0; i--){
 		cur_addr = current.cluster->firstSectors[i] * BPB_BytesPerSec * BPB_SecPerClus;
 		fseek(fatcat.img, cur_addr, SEEK_SET);
-		status = fwrite(&freeval, 4, 1, fatcat.img);
+		fwrite(&freeval, 4, 1, fatcat.img);
 	}
 
 	rewind(fatcat.img);
