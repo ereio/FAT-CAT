@@ -1,6 +1,9 @@
-
+/*
+ * http://stackoverflow.com/questions/11242642/how-to-extract-hours-from-time-t
+ * */
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <string.h>
 #include <ctype.h>
 #include "../global.h"
@@ -93,8 +96,9 @@ void CreateDirectory(char args[][ACOLS]){
 
 	// add name parsing by slashes, right now depth is 1
 	temp = finddir(*fatcat.curDir, ATTR_ALL, name);
+	PrintDirVerbose(temp);
 
-	if(temp.name[0] == DIR_EMPTY && temp.name[0] == DIR_ERROR){
+	if(temp.name[0] == DIR_EMPTY || temp.name[0] == DIR_NOTFOUND){
 		PrintDirVerbose(temp);
 		makedir(*fatcat.curDir, name);
 	} else if(temp.Attr == ATTR_DIRECTORY){
@@ -202,7 +206,7 @@ struct directory parsedir(unsigned long byte_addr){
 	}
 
 	if(!(dir.Attr ^ ATTR_DIRECTORY) || !(dir.Attr ^ ATTR_ARCHIVE)){
-		setclus(&dir);
+		setdirclus(&dir);
 	}
 
 #ifdef  _DEBUGGING_F
@@ -212,11 +216,49 @@ struct directory parsedir(unsigned long byte_addr){
 	return dir;
 }
 
-struct directory makedir(struct directory current, char * name){
+int makedir(struct directory current, char * name){
+	time_t ttime = time(NULL);
+	struct tm * tmtime = localtime(&ttime);;
 	struct directory temp;
+	struct cluster new;
+	unsigned int curclus = 0;
+	char * tempname = malloc(sizeof(char) * strlen(name));
+	temp.cluster = malloc(sizeof(struct cluster));
+
+	strcpy(tempname, name);
+	nametofat(tempname);
+
+	// set up new directory structure
+	strcpy(temp.name, tempname);
+	temp.Attr = ATTR_DIRECTORY;
+	temp.NTRes = 0x00;
+	temp.CrtDate = temp.CrtTime = temp.CrtTimeTenth = temp.LstAccDate =  0x00;
+	temp.WrtDate = tmtime->tm_mday | ((tmtime->tm_mon + 1) << 4) | (tmtime->tm_year - 80) << 8;
+	temp.WrtTime = tmtime->tm_sec | (tmtime->tm_min << 4) | (tmtime->tm_hour) << 10;
+
+	new = getfreeclus(fatcat.img);
+	if(temp.cluster->firstSectors[0] == DIR_EMPTY){
+		printf("Drive is full\n");
+		return -1;
+	}
 
 
-	return temp;
+	// find cluster to store new directory
+	memcpy(temp.cluster, &new, sizeof(struct cluster));
+
+	// Find current directory cluster to see if in root
+	curclus = current.FstClusHi;
+	curclus = curclus << 1;
+	curclus = curclus | current.FstClusLO;
+
+	// create dot and dotdot entries here, use current('..') and temp('.')
+	if(curclus != 0) {
+
+	}
+
+
+	free(temp.cluster);
+	return 0;
 }
 
 int checkdirerr(struct directory dir){

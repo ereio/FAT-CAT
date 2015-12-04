@@ -66,7 +66,7 @@ int checkFile(struct directory dir) {
 	return -1;
 }
 
-void removeFile(struct directory dir) {
+void removeOpenFile(struct directory dir) {
 	int i;
 	int j;
 	int k;
@@ -113,7 +113,7 @@ void closeFile(char args[][ACOLS]) {
 
 	if (!(found_dir.Attr & ATTR_DIRECTORY)) {
 		if (checkFile(found_dir) != -1) {
-			removeFile(found_dir);
+			removeOpenFile(found_dir);
 			return;
 		}
 
@@ -145,3 +145,35 @@ int sizeFile(char args[][ACOLS]){
 
 	return -1;
 }
+
+int rmFile(char args[][ACOLS]){
+	struct directory found_dir;
+
+	char * fileName = malloc(sizeof(char) * strlen(args[1]));
+
+	strcpy(fileName, args[1]);
+	found_dir = finddir(*fatcat.curDir, ATTR_ALL, fileName);
+
+	if (found_dir.name[0] == 0x00 || (found_dir.Attr & ATTR_LONG_NAME)) {
+		printf("%s does not exist in this directory\n", fileName);
+		return 0;
+	}
+
+	if (!(found_dir.Attr & ATTR_DIRECTORY)) {
+		printf("%s is a directory\n", fileName);
+		return 0;
+	}
+
+	if(found_dir.name[0] != ' '){
+		freecluschain(found_dir);
+	}
+
+	return 0;
+}
+
+
+
+
+
+
+

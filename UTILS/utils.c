@@ -3,6 +3,9 @@
  * http://www.cplusplus.com/reference/cstdio/fread/
  * http://www.cplusplus.com/reference/cstdio/fseek/
  * http://stackoverflow.com/questions/10375932/printing-the-hexadecimal-representation-of-a-char-array
+ *
+ * Finding byte address:
+ * Take info.firstSectors[info.clusterNum] * BPB_BytesPerSector -> convert to hex
  * */
 #include "../global.h"
 #include <stdio.h>
@@ -78,8 +81,6 @@ int LoadFSInfo(FILE * img) {
 	fseek(img, 12, SEEK_CUR);
 	fread(&fatcat.fsinfo.FSI_TrailSig, 4, 1, img);
 
-	temp = FindClusterInfo(fatcat.fsinfo.FSI_Nxt_Free);
-
 #ifdef _DEBUGGING_BOOT_SECT
 	printf("\nFSI_LeadSig: 0x%x", fatcat.fsinfo.FSI_LeadSig);
 	printf("\nFSI_StrcSig: 0x%x", fatcat.fsinfo.FSI_StrcSig);
@@ -87,7 +88,6 @@ int LoadFSInfo(FILE * img) {
 
 	printf("\n\nNext Free Cluster: %d", fatcat.fsinfo.FSI_Nxt_Free);
 	printf("\nLast Free Cluster: %d", fatcat.fsinfo.FSI_Free_Count);
-	printf("\nNext Free Address: 0x%x", fatcat.fsinfo.TEST);
 #endif
 	return 0;
 }
@@ -117,7 +117,7 @@ int SetRootDir(FILE * img) {
 
 	fatcat.dirName = "/";
 
-#ifdef _DEBUGGING_F
+#ifdef _DEBUGGING_BOOT_SECT
 	printf("\n\nRoot Directory Address: %d", fatcat.rootDirSectors);
 	printf("\nFirst Data Sector: 0x%x", fatcat.firstDataSector);
 	printf("\nTotal Data Sectors: %d", fatcat.dataSectors);
@@ -134,7 +134,7 @@ void nametofat(char * name){
 	}
 }
 
-unsigned int setclus(struct directory * dir){
+unsigned int setdirclus(struct directory * dir){
 		struct cluster temp;
 		unsigned int clusval = 0;
 
@@ -181,7 +181,9 @@ struct cluster FindClusterInfo(unsigned int cluster){
 		more = next_cluster < EOC;
 		if(more) cluster = next_cluster;
 
-#ifdef _DEBUGGING_BOOT_SECT
+		info.clusterNum++;
+
+#ifdef _DEBUGGING_BOOT_SEC
 		printf("\n\nCLUSTER USED:%d", cluster);
 		printf("\nFatOffset: 0x%x", fatOffset);
 		printf("\nThisFATSecNum: 0x%x", info.sectorNums[info.clusterNum]);
@@ -191,12 +193,94 @@ struct cluster FindClusterInfo(unsigned int cluster){
 		printf("\nEOC value == 0x%lx", next_cluster);
 		printf("\nClusterNum: %d", info.clusterNum);
 #endif
-		info.clusterNum++;
 	}
-
 	return info;
 }
 
+struct cluster getfreeclus(FILE * img){
+	struct cluster free;
+
+	fseek(img, BPB_FSInfo * BPB_BytesPerSec, SEEK_SET);
+	fread(&fatcat.fsinfo.FSI_LeadSig, 4, 1, img);
+	fseek(img, 480, SEEK_CUR);
+	fread(&fatcat.fsinfo.FSI_StrcSig, 4, 1, img);
+
+	if(fatcat.fsinfo.FSI_LeadSig == LEAD_SIG_VAL &&
+			fatcat.fsinfo.FSI_StrcSig == STRUC_SIG_VAL){
+		fread(&fatcat.fsinfo.FSI_Free_Count, 4, 1, img);
+		fread(&fatcat.fsinfo.FSI_Nxt_Free, 4, 1, img);
+	}
+
+	if(fatcat.fsinfo.FSI_Free_Count < 1){
+		free = FindClusterInfo(fatcat.fsinfo.FSI_Nxt_Free + 1);
+		if(free.firstSectors[0] != 0){
+
+		}
+	} else {
+		// No clusters are free
+		free.firstSectors[0] = 0x00;
+	}
+
+	return free;
+}
+
+struct cluster freecluschain(struct directory dir){
+	struct cluster info;
+	unsigned int fatOffset = 0;
+	unsigned int clusval = 0;
+	unsigned long next_cluster = 0;
+	unsigned long byte_addr;
+	int searching = 1; 				// Indicates there are more clusters in chain
+	info.clusterNum = 0;
+
+	clusval = dir.FstClusHi;
+	clusval = clusval << 1;
+	clusval = clusval | dir.FstClusLO;
+
+	for(int i=0; i < dir.cluster->clusterNum; i++){
+		while(searching){
+			fatOffset = clusval * 4;
+
+			// Finds first data sector for cluster / cluster chain node
+			info.firstSectors[info.clusterNum] = ((clusval - 2) * BPB_SecPerClus) + fatcat.firstDataSector;
+			info.sectorNums[info.clusterNum] = BPB_RsvdSecCnt + (fatOffset / BPB_BytesPerSec);	// sector of cluster chain info
+			info.entryOffset[info.clusterNum] = fatOffset % BPB_BytesPerSec;					// offset of cluster chain info
+
+			// address found using the sector and offset
+			byte_addr = (info.firstSectors[info.clusterNum] * BPB_BytesPerSec);
+
+			printf("Byte Addr for free Cluster 0x%lx", byte_addr);
+
+			// goes to address to see if another cluster contains information in a cluster chain
+			fseek(fatcat.img, byte_addr, SEEK_SET);
+			fread(&next_cluster, 4, 1, fatcat.img);
+
+			// check to see if the End of Cluster Chain value was found
+			searching = next_cluster < EOC && next_cluster != 0x00;
+			if(searching) {
+				clusval = next_cluster;
+			} else {
+				// Delete last cluster
+				fseek(fatcat.img, byte_addr, SEEK_SET);
+
+			}
+
+#ifdef _DEBUGGING_BOOT_SECT
+			printf("\n\nCLUSTER USED:%d", clusval);
+			printf("\nFatOffset: 0x%x", fatOffset);
+			printf("\nThisFATSecNum: 0x%x", info.sectorNums[info.clusterNum]);
+			printf("\nThisFATEntOff: 0x%x", info.entryOffset[info.clusterNum]);
+			printf("\nThisFATSecNum Address: 0x%lx", byte_addr);
+			printf("\nFIRST SECTOR: 0x%x", info.firstSectors[info.clusterNum]);
+			printf("\nEOC value == 0x%lx", next_cluster);
+			printf("\nClusterNum: %d", info.clusterNum);
+#endif
+		}
+	}
+
+
+	return info;
+}
 int PrintBootSectInfo(){
 
 	printf("\n\nBytes Per Sector: %d\n", BPB_BytesPerSec);
@@ -251,8 +335,6 @@ int PrintBootSectInfo(){
 		printf("%c", BS_FilSysType[i]);
 
 	printf("\n\n");
-
-
 
 	return 0;
 }

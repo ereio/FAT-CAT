@@ -8,7 +8,9 @@ int PrintBootSectInfo();
 int SetRootDir();
 struct cluster FindClusterInfo(unsigned int cluster);
 
-unsigned int setclus(struct directory * dir);
+struct cluster getfreeclus();
+unsigned int setdirclus(struct directory * dir);
+struct cluster freecluschain(struct directory dir);
 void nametofat(char * name);
 
 #endif
