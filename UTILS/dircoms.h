@@ -9,10 +9,12 @@ void CreateDirectory(char args[][ACOLS]);
 
 // Low level operations
 int removedir();
+int cleardir(unsigned long byte_addr);
 int printdir(struct directory current);
 int makedir(struct directory current, char * name);
 struct directory finddir(struct directory current, unsigned int attr,  char * name);
 struct directory parsedir(unsigned long sector);
+
 
 int checkdirerr(struct directory dir);
 void convertdirname(struct directory dir, char * name);

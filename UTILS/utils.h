@@ -10,7 +10,7 @@ struct cluster FindClusterInfo(unsigned int cluster);
 
 struct cluster getfreeclus();
 unsigned int setdirclus(struct directory * dir);
-struct cluster freecluschain(struct directory dir);
+int freecluschain(struct directory dir);
 void nametofat(char * name);
 
 #endif

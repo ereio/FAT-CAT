@@ -70,7 +70,7 @@ int _execute(char args[][ACOLS])
 	else if(!strcmp(CREATE, args[0]))
 		template(args);
 	else if(!strcmp(RM, args[0]))
-		template(args);
+		rmFile(args);
 	else if(!strcmp(CD, args[0]))
 		ChangeDirectory(args);
 	else if(!strcmp(LS, args[0]))

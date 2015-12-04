@@ -80,7 +80,7 @@ int main(int argc, char* args[])
 	char *line;
 	char cmd[255][255];
 
-	fatcat.img = fopen(args[1], "r");	/* opens file system*/
+	fatcat.img = fopen(args[1], "r+");	/* opens file system*/
 
  	if(!init_memmy()) return 1;	/* Address Mem initialization*/
 

@@ -22,6 +22,7 @@
 #define MAX_ADDR_NAME 16
 #define DEFAULT_ALLOC 255
 #define EOC 0xFFFFFF8	// End Of Cluster
+#define FREE 0x00000000
 #define LEAD_SIG_VAL 0x41615252
 #define STRUC_SIG_VAL 0x61417272
 #define HIGH_DATE
