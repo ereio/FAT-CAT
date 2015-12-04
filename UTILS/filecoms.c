@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <inttypes.h>
 #include "../global.h"
 #include "UTILS/dircoms.h"
 #include "UTILS/filecoms.h"
@@ -171,9 +172,43 @@ int rmFile(char args[][ACOLS]){
 	return 0;
 }
 
+void readFile(char args[][ACOLS]) {
+	char * fileName = malloc(sizeof(char) * strlen(args[1]));
+	char * position = malloc(sizeof(char) * strlen(args[2]));
+	char * num_bytes = malloc(sizeof(char) * strlen(args[3]));
+	unsigned int pos;
+	unsigned int numBytes;
+	int check_mode;
 
+	strcpy(fileName, args[1]);
+	struct directory found_dir;
+	found_dir = finddir(*fatcat.curDir, ATTR_ALL, fileName);
+	if (found_dir.name[0] == 0x00 || (found_dir.Attr & ATTR_LONG_NAME)) {
+		printf("%s does not exist in this directory\n", fileName);
+		return;
+	}
 
+	strcpy(position, args[2]);
+	strcpy(num_bytes, args[3]);
 
+	pos = strtoumax(position, NULL, 10);
+	numBytes = strtoumax(num_bytes, NULL, 10);
 
+	if (!(found_dir.Attr & ATTR_DIRECTORY)) {
+		check_mode = checkFile(found_dir);
+		if (check_mode != -1) {
+			if (check_mode == R || check_mode == RW) {
 
+			}
+			else {
+				printf("File %s is not open in read mode\n", fileName);
+				return;
+			}
+		}
+	}
+	else {
+		printf("%s is a directory\n", fileName);
+	}
 
+	return;
+}

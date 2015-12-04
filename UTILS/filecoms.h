@@ -8,5 +8,6 @@ void removeOpenFile(struct directory dir);
 int rmFile(char args[][ACOLS]);
 void closeFile(char args[][ACOLS]);
 void printFiles();
+void readFile(char args[][ACOLS]);
 
 #endif

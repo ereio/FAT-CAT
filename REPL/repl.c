@@ -80,7 +80,7 @@ int _execute(char args[][ACOLS])
 	else if(!strcmp(RMDIR, args[0]))
 		template(args);
 	else if(!strcmp(READ, args[0]))
-		template(args);
+		readFile(args);
 	else if(!strcmp(WRITE, args[0]))
 		template(args);
 	else
