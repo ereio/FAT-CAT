@@ -68,7 +68,6 @@ int LoadBPB(FILE * img) {
 }
 
 int LoadFSInfo(FILE * img) {
-	struct cluster temp;
 
 	fseek(img, BPB_FSInfo * BPB_BytesPerSec, SEEK_SET);
 	fread(&fatcat.fsinfo.FSI_LeadSig, 4, 1, img);
@@ -225,17 +224,16 @@ struct cluster getfreeclus(FILE * img){
 }
 
 int freecluschain(struct directory current){
-	int endofdir = 0;
-	int linecount = 1;
-	struct directory curdir;
+	unsigned int freeval = 0;
 	unsigned long cur_addr = 0;
-	unsigned long end_addr = 0;
+	int status = -5;
 
 	for(int i=current.cluster->clusterNum; i >= 0; i--){
 		cur_addr = current.cluster->firstSectors[i] * BPB_BytesPerSec * BPB_SecPerClus;
-		end_addr = cur_addr + (BPB_BytesPerSec * BPB_SecPerClus);
-
-		fwrite(FREE, 4, 1, fatcat.img);
+		printf("CUR ADD: 0x%lx\n", cur_addr);
+		fseek(fatcat.img, cur_addr, SEEK_SET);
+		status = fwrite(&freeval, 4, 2, fatcat.img);
+		printf("Status: %d\n", status);
 	}
 		return 0;
 }

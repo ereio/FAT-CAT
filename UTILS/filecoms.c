@@ -168,6 +168,7 @@ int rmFile(char args[][ACOLS]){
 
 	if(found_dir.name[0] != ' '){
 		freecluschain(found_dir);
+
 	}
 
 	return 0;

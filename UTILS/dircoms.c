@@ -239,9 +239,38 @@ int parsedata(struct directory dir, unsigned int spos, unsigned int epos){
 	return 0;
 }
 
-int cleardir(unsigned long byte_addr){
-	fseek(fatcat.img, byte_addr, SEEK_SET);
-	fwrite(FREE, 4, 1, fatcat.img);
+int cleardir(struct directory current, char * name){
+	unsigned char freeval = 0xE5;
+	int endofdir = 0;
+	unsigned long cur_addr = 0;
+	unsigned long end_addr = 0;
+	struct directory dir;
+	char dirName[12];
+
+	for(int i=0; i < current.cluster->clusterNum; i++){
+		endofdir = 0;
+		cur_addr = current.cluster->firstSectors[i] * BPB_BytesPerSec * BPB_SecPerClus;
+		end_addr = cur_addr + (BPB_BytesPerSec * BPB_SecPerClus);
+
+		while(!endofdir){
+			dir = parsedir(cur_addr);
+			if(dir.name[0] == DIR_ERROR) printf("\nAn invalid directory was encountered");
+
+			convertdirname(dir, dirName);
+			if(!strcmp(dirName, name)){
+				printf("WRITE ADDR 0x%lx", cur_addr);
+				fseek(fatcat.img, cur_addr, SEEK_SET);
+				fwrite(&freeval, 2, 1, fatcat.img);
+			}
+
+			cur_addr += DIR_SIZE;
+			endofdir = (dir.name[0] == 0x00 ? 1 : 0) || (cur_addr == end_addr);
+			if(dir.cluster != NULL) free(dir.cluster);
+		}
+	}
+
+
+
 	return 0;
 }
 
