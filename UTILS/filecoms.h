@@ -7,5 +7,6 @@ int sizeFile(char args[][ACOLS]);
 void removeOpenFile(struct directory dir);
 int rmFile(char args[][ACOLS]);
 void closeFile(char args[][ACOLS]);
+void printFiles();
 
 #endif
