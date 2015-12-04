@@ -64,7 +64,7 @@ int _execute(char args[][ACOLS])
 	else if(!strcmp(OPEN, args[0]))
 		openFile(args);
 	else if(!strcmp(CLOSE, args[0]))
-		template(args);
+		closeFile(args);
 	else if(!strcmp(SIZE, args[0]))
 		sizeFile(args);
 	else if(!strcmp(CREATE, args[0]))

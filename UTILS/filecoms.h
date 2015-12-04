@@ -6,5 +6,6 @@ int checkFile(struct directory dir);
 int sizeFile(char args[][ACOLS]);
 void removeFile(struct directory dir);
 void closeFile(char args[][ACOLS]);
+void printFiles();
 
 #endif

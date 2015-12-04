@@ -35,8 +35,6 @@ int openFile(char args[][ACOLS]) {
 			return 0;
 		}
 
-		printf("num: %d\n", num_open_files);
-
 		if (checkFile(found_dir) != -1) {
 			printf("File %s already open\n", fileName);
 			return 0;
@@ -59,10 +57,7 @@ int openFile(char args[][ACOLS]) {
 int checkFile(struct directory dir) {
 	int i;
 	for (i = 0; i < num_open_files; i++) {
-		if (!(strcmp(OPENFILES[i].name, dir.name)) &&
-				OPENFILES[i].Attr == dir.Attr &&
-				OPENFILES[i].FileSize == dir.FileSize &&
-				OPENFILES[i].FstClusHi == dir.FstClusHi &&
+		if (OPENFILES[i].FstClusHi == dir.FstClusHi &&
 				OPENFILES[i].FstClusLO == dir.FstClusLO) {
 			return OPENFILES[i].Mode;
 		}
@@ -78,11 +73,9 @@ void removeFile(struct directory dir) {
 	struct directory tmp;
 
 	for (i = 0; i < num_open_files; i++) {
-		if (!(strcmp(OPENFILES[i].name, dir.name)) &&
-				OPENFILES[i].Attr == dir.Attr &&
-				OPENFILES[i].FileSize == dir.FileSize &&
-				OPENFILES[i].FstClusHi == dir.FstClusHi &&
+		if (OPENFILES[i].FstClusHi == dir.FstClusHi &&
 				OPENFILES[i].FstClusLO == dir.FstClusLO) {
+
 			for (j = i; j < num_open_files; j++) {
 				for (k = j + 1; k < num_open_files; k++) {
 					OPENFILES[j] = OPENFILES[k];
@@ -97,6 +90,15 @@ void removeFile(struct directory dir) {
 	}
 
 	return;
+}
+
+void printFiles() {
+	int i;
+	for (i = 0; i < num_open_files; i++) {
+		printf("%s, ", OPENFILES[i].name);
+	}
+
+	printf("\n");
 }
 
 void closeFile(char args[][ACOLS]) {
@@ -125,7 +127,21 @@ void closeFile(char args[][ACOLS]) {
 }
 
 int sizeFile(char args[][ACOLS]){
+	char * fileName = malloc(sizeof(char) * strlen(args[1]));
+	strcpy(fileName, args[1]);
+	struct directory found_dir;
+	found_dir = finddir(*fatcat.curDir, ATTR_ALL, fileName);
+	if (found_dir.name[0] == 0x00 || (found_dir.Attr & ATTR_LONG_NAME)) {
+		printf("%s does not exist in this directory\n", fileName);
+		return 0;
+	}
 
+	if (!(found_dir.Attr & ATTR_DIRECTORY)) {
+		printf("%d\n", found_dir.FileSize);
+	}
+	else {
+		printf("%s is a directory\n", fileName);
+	}
 
 	return -1;
 }
