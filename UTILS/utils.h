@@ -7,10 +7,10 @@ int LoadBPB(FILE * img);
 int PrintBootSectInfo();
 int SetRootDir();
 struct cluster FindClusterInfo(unsigned int cluster);
-struct cluster getfreeclus();
 
+struct cluster getfreeclus();
 unsigned int setdirclus(struct directory * dir);
-struct cluster freeclus(struct directory * dir);
+struct cluster freecluschain(struct directory dir);
 void nametofat(char * name);
 
 #endif
