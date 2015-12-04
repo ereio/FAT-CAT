@@ -216,6 +216,35 @@ struct directory parsedir(unsigned long byte_addr){
 	return dir;
 }
 
+int parsedata(struct directory dir, unsigned int spos, unsigned int epos){
+	char next;
+	unsigned long cur_addr = 0;
+	unsigned long end_addr = 0;
+	unsigned long start_clus = spos / (BPB_BytesPerSec * BPB_SecPerClus);
+	unsigned long end_clus = epos / (BPB_BytesPerSec * BPB_SecPerClus);
+
+	if(spos < 0) return -1;
+	for(int i=start_clus; i <= end_clus && i < dir.cluster->clusterNum; i++){
+		cur_addr = dir.cluster->firstSectors[i] * BPB_BytesPerSec * BPB_SecPerClus;
+		end_addr = cur_addr + (BPB_BytesPerSec * BPB_SecPerClus);
+
+		fseek(fatcat.img, cur_addr + spos, SEEK_SET);
+
+		for(int j=spos; j < epos; j++){
+			fread(&next, 2, 1, fatcat.img);
+			printf("%c",next);
+		}
+	}
+
+	return 0;
+}
+
+int cleardir(unsigned long byte_addr){
+	fseek(fatcat.img, byte_addr, SEEK_SET);
+	fwrite(FREE, 4, 1, fatcat.img);
+	return 0;
+}
+
 int makedir(struct directory current, char * name){
 	time_t ttime = time(NULL);
 	struct tm * tmtime = localtime(&ttime);;

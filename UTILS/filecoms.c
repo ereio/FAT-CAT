@@ -101,9 +101,11 @@ void removeOpenFile(struct directory dir) {
 
 void closeFile(char args[][ACOLS]) {
 	char * fileName = malloc(sizeof(char) * strlen(args[1]));
-	strcpy(fileName, args[1]);
 	struct directory found_dir;
+
 	found_dir = finddir(*fatcat.curDir, ATTR_ALL, fileName);
+	strcpy(fileName, args[1]);
+
 	if (found_dir.name[0] == 0x00 || (found_dir.Attr & ATTR_LONG_NAME)) {
 		printf("%s does not exist in this directory\n", fileName);
 		return;
@@ -143,7 +145,7 @@ int rmFile(char args[][ACOLS]){
 		return 0;
 	}
 
-	if (!(found_dir.Attr & ATTR_DIRECTORY)) {
+	if (!(found_dir.Attr ^ ATTR_DIRECTORY)) {
 		printf("%s is a directory\n", fileName);
 		return 0;
 	}
