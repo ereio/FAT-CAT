@@ -216,21 +216,19 @@ struct directory parsedir(unsigned long byte_addr){
 	return dir;
 }
 
-int parsedata(struct directory dir, unsigned int spos, unsigned int epos){
+int parsedata(struct directory dir, unsigned int spos, unsigned int numBytes){
 	char next;
 	unsigned long cur_addr = 0;
-	unsigned long end_addr = 0;
 	unsigned long start_clus = spos / (BPB_BytesPerSec * BPB_SecPerClus);
-	unsigned long end_clus = epos / (BPB_BytesPerSec * BPB_SecPerClus);
+	unsigned long end_clus = (spos + numBytes - 1) / (BPB_BytesPerSec * BPB_SecPerClus);
 
 	if(spos < 0) return -1;
 	for(int i=start_clus; i <= end_clus && i < dir.cluster->clusterNum; i++){
 		cur_addr = dir.cluster->firstSectors[i] * BPB_BytesPerSec * BPB_SecPerClus;
-		end_addr = cur_addr + (BPB_BytesPerSec * BPB_SecPerClus);
 
-		fseek(fatcat.img, cur_addr, SEEK_SET);
+		fseek(fatcat.img, cur_addr+spos, SEEK_SET);
 
-		for(int j=spos; j < epos; j++){
+		for(int j=spos; j < spos + numBytes; j++){
 			fread(&next, 1, 1, fatcat.img);
 			printf("%c",next);
 		}
